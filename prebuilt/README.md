@@ -2,6 +2,9 @@
 
 This directory contains prebuilt versions of the MLPerf (Android) app, for convenience.
 
+*Please note that this app is not official yet and the integration with LoadGen
+isn't quite complete yet.*
+
 ## Getting Started ##
 
 Until the app is available in the [Play Store](https://play.google.com/store?hl=en_US), it requires

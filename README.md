@@ -3,6 +3,9 @@
 This project contains the MLPerf mobile app, an app-based implementationn of
 [MLPerf Inference](https://github.com/mlperf/inference) tasks.
 
+*Please note that this app is not official yet and the integration with LoadGen
+isn't quite complete yet.*
+
 ## Overview ##
 
 The MLPerf app offers a simple mobile UI for executing MLPerf inference tasks and comparing results. The user can select a task, a supported reference model (float or quantized), and initiate both latency and accuracy validation for that task. As single-stream represents the most common inference execution on mobile devices, that is the default mode of inference measurement, with the results showing the 90%-ile latency and the task-specific accuracy metric result (e.g., top-1 accuracy for image classification).
