@@ -1,0 +1,54 @@
+task {
+  name: "Image classification"
+  dataset {
+    name: "Imagenet 2012"
+    type: IMAGENET
+    path: "/sdcard/mlperf_datasets/imagenet/img/"
+    groundtruth_src: "@assets/imagenet_val.txt"
+    groundtruth_path: "/sdcard/mlperf_datasets/imagenet/imagenet_val.txt"
+    is_raw_images: false
+  }
+  model {
+    name: "MobileNets-v1 224 Uint8"
+    src: "@assets/mobilenet_v1_1.0_224_quant.tflite"
+    path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224_quant.tflite"
+    num_inputs: 1
+    num_outputs: 1
+    offset: 1
+    tags: "uint8"
+  }
+  model {
+    name: "MobileNets-v1 224 Float"
+    src: "@assets/mobilenet_v1_1.0_224.tflite"
+    path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224.tflite"
+    offset: 1
+    num_inputs: 1
+    num_outputs: 1
+    tags: "float"
+  }
+  min_query_count: 100
+  min_duration_ms: 1000
+}
+
+task {
+  name: "Object detection"
+  dataset {
+    name: "Coco 2017"
+    type: COCO
+    path: "/sdcard/mlperf_datasets/coco/img/"
+    groundtruth_src: "@assets/coco_val.pbtxt"
+    groundtruth_path: "/sdcard/mlperf_datasets/coco/coco_val.pbtxt"
+    is_raw_images: false
+  }
+  model {
+    name: "SSD-MobileNets-v1 Uint8"
+    src: "@assets/coco_ssd_mobilenet_v1_1.0_quant.tflite"
+    path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0_quant.tflite"
+    num_inputs: 1
+    num_outputs: 4
+    offset: 1
+    tags: "uint8"
+  }
+  min_query_count: 100
+  min_duration_ms: 1000
+}

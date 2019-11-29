@@ -1,0 +1,41 @@
+diff -Naur a/tensorflow/core/BUILD b/tensorflow/core/BUILD
+--- a/tensorflow/core/BUILD	2019-11-27 19:00:11.000000000 +0900
++++ b/tensorflow/core/BUILD	2019-11-27 19:40:18.493908218 +0900
+@@ -138,23 +138,10 @@
+ # Placeholder for Google-internal load statements.
+ 
+ package(
+-    default_visibility = [
+-        ":dependency_whitelist",
+-        "//tensorflow:internal",
+-        "//tensorflow_models:__subpackages__",
+-    ],
++    default_visibility = ["//visibility:public"],
+     licenses = ["notice"],  # Apache 2.0
+ )
+ 
+-package_group(
+-    name = "dependency_whitelist",
+-    packages = [
+-        "//learning/freud/topic_models/tensorflow/...",
+-        "//perftools/accelerators/xprof/api/...",
+-        "//quality/webanswers/brain/tokenization/custom_tf_ops/kernels/...",
+-    ],
+-)
+-
+ # Export the BUILD file so automated tooling can check licenses
+ exports_files([
+     "BUILD",
+diff -Naur a/tensorflow/lite/c/BUILD b/tensorflow/lite/c/BUILD
+--- a/tensorflow/lite/c/BUILD	2019-11-27 19:00:11.000000000 +0900
++++ b/tensorflow/lite/c/BUILD	2019-11-27 19:40:59.742747355 +0900
+@@ -10,9 +10,6 @@
+         "builtin_op_data.h",
+         "common.h",
+     ],
+-    visibility = [
+-        "//tensorflow/lite:__subpackages__",
+-    ],
+ )
+ 
+ # For use with library targets that can't use relative paths.
