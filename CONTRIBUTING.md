@@ -45,7 +45,20 @@ Include a license at the top of new files.
 
 #### C++ coding style
 
-(Note: Technical details TBD by community.)
+The code was originally contributed by Google so it conforms to the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+
+Use the `clang-format` to check your C/C++ changes. To install `clang-format`, do:
+
+```bash
+sudo apt install clang-format
+```
+
+You can also check C/C++ files by running the `format_code.sh` script (recommended):
+```bash
+bash format_code.sh
+```
+
+The script also checks the format of modified bazel build files using [buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier).
 
 #### Python coding style
 
