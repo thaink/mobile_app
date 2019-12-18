@@ -17,30 +17,23 @@ limitations under the License.
 #include <memory>
 #include <string>
 
+#include "cpp/backend.h"
 #include "cpp/dataset.h"
 #include "cpp/mlperf_driver.h"
 #include "tensorflow/lite/java/src/main/native/jni_utils.h"
 
-std::unique_ptr<tflite::mlperf::Dataset> convertLongToDataset(JNIEnv* env,
-                                                              jlong handle) {
-  if (handle == 0) {
-    ::tflite::jni::ThrowException(env, kIllegalArgumentException,
-                                  "Internal error: Invalid handle to Dataset.");
-    return nullptr;
-  }
-  return std::unique_ptr<tflite::mlperf::Dataset>(
-      reinterpret_cast<tflite::mlperf::Dataset*>(handle));
-}
+using mlperf::mobile::Backend;
+using mlperf::mobile::Dataset;
+using mlperf::mobile::MlperfDriver;
 
-tflite::mlperf::TfliteMlperfDriver* convertLongToMlperfDriver(JNIEnv* env,
-                                                              jlong handle) {
+MlperfDriver* convertLongToMlperfDriver(JNIEnv* env, jlong handle) {
   if (handle == 0) {
-    ::tflite::jni::ThrowException(
+    tflite::jni::ThrowException(
         env, kIllegalArgumentException,
-        "Internal error: Invalid handle to TfliteMlperfDriver.");
+        "Internal error: Invalid handle to MlperfDriver.");
     return nullptr;
   }
-  return reinterpret_cast<tflite::mlperf::TfliteMlperfDriver*>(handle);
+  return reinterpret_cast<MlperfDriver*>(handle);
 }
 
 #ifdef __cplusplus
@@ -48,19 +41,19 @@ extern "C" {
 #endif  // __cplusplus
 
 JNIEXPORT jlong JNICALL
-Java_org_mlperf_inference_MLPerfDriverWrapper_nativeInit(
-    JNIEnv* env, jclass clazz, jstring jmodel_file_path, jlong dataset_handle,
-    jint num_thread, jstring jdelegate, jint num_input, jint num_output) {
-  // Convert parameters to C++.
-  std::string model_file_path =
-      env->GetStringUTFChars(jmodel_file_path, nullptr);
-  std::string delegate = env->GetStringUTFChars(jdelegate, nullptr);
-
-  // create a new TfliteMlperfDriver
-  std::unique_ptr<tflite::mlperf::TfliteMlperfDriver> driver_ptr(
-      new tflite::mlperf::TfliteMlperfDriver(
-          model_file_path, num_thread, delegate, num_input, num_output,
-          convertLongToDataset(env, dataset_handle)));
+Java_org_mlperf_inference_MLPerfDriverWrapper_nativeInit(JNIEnv* env,
+                                                         jclass clazz,
+                                                         jlong dataset_handle,
+                                                         jlong backend_handle) {
+  if (dataset_handle == 0 || backend_handle == 0) {
+    tflite::jni::ThrowException(env, kIllegalArgumentException,
+                                "Internal error: Invalid handle.");
+  }
+  Dataset* dataset = reinterpret_cast<Dataset*>(dataset_handle);
+  Backend* backend = reinterpret_cast<Backend*>(backend_handle);
+  // create a new MlperfDriver
+  std::unique_ptr<MlperfDriver> driver_ptr(new MlperfDriver(
+      std::unique_ptr<Dataset>(dataset), std::unique_ptr<Backend>(backend)));
   return reinterpret_cast<jlong>(driver_ptr.release());
 }
 
@@ -72,7 +65,7 @@ JNIEXPORT void JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_nativeRun(
   std::string output_dir = env->GetStringUTFChars(joutput_dir, nullptr);
   // Start the test.
   convertLongToMlperfDriver(env, driver_handle)
-      ->StartMLPerfTest(mode, min_query_count, min_duration, output_dir);
+      ->RunMLPerfTest(mode, min_query_count, min_duration, output_dir);
 }
 
 JNIEXPORT jstring JNICALL
@@ -85,10 +78,9 @@ Java_org_mlperf_inference_MLPerfDriverWrapper_nativeGetLatency(
 
 JNIEXPORT jstring JNICALL
 Java_org_mlperf_inference_MLPerfDriverWrapper_nativeGetAccuracy(
-    JNIEnv* env, jclass clazz, jlong helper_handle, jstring jgt_file) {
-  std::string gt_file = env->GetStringUTFChars(jgt_file, nullptr);
-  std::string accuracy = convertLongToMlperfDriver(env, helper_handle)
-                             ->ComputeAccuracyString(gt_file);
+    JNIEnv* env, jclass clazz, jlong helper_handle) {
+  std::string accuracy =
+      convertLongToMlperfDriver(env, helper_handle)->ComputeAccuracyString();
   return env->NewStringUTF(accuracy.c_str());
 }
 

@@ -35,13 +35,10 @@ import org.mlperf.proto.TaskConfig;
  */
 public final class RunMLPerfWorker extends Worker {
   private static final String TAG = "RunMLPerfWorker";
-  private static final int NUM_SAMPLES_IMAGENET_DUMMY = 100;
-  private static final int INPUT_SIZE_IMAGENET_DUMMY = 224 * 224 * 3;
-  private static final int NUM_SAMPLES_COCO_DUMMY = 100;
-  private static final int INPUT_SIZE_COCO_DUMMY = 300 * 300 * 3;
 
   private final MLPerfConfig mlperfTasks;
 
+  // Same parsing is done in MLPerfEvaluation so it is unlikely to throw an exception here.
   public RunMLPerfWorker(@NonNull Context context, @NonNull WorkerParameters params)
       throws IOException {
     super(context, params);
@@ -74,30 +71,35 @@ public final class RunMLPerfWorker extends Worker {
     ModelConfig modelConfig = taskConfig.getModel(modelIdx);
     DatasetConfig dataset = taskConfig.getDataset();
     try {
-      MLPerfDriverWrapper.Builder builder =
-          new MLPerfDriverWrapper.Builder(
-              modelConfig.getPath(), modelConfig.getNumInputs(), modelConfig.getNumOutputs());
-      builder.setNumThreads(numThreads).setDelegate(delegate);
-      switch (dataset.getType()) {
-        case IMAGENET:
-          if (useDummyDataset) {
-            builder.useDummy(NUM_SAMPLES_IMAGENET_DUMMY, INPUT_SIZE_IMAGENET_DUMMY);
-          } else {
+      MLPerfDriverWrapper.Builder builder = new MLPerfDriverWrapper.Builder();
+      builder.useTfliteBackend(
+          modelConfig.getPath(),
+          numThreads,
+          delegate,
+          modelConfig.getNumInputs(),
+          modelConfig.getNumOutputs());
+      if (useDummyDataset) {
+        builder.useDummy();
+      } else {
+        switch (dataset.getType()) {
+          case IMAGENET:
             builder.useImagenet(
-                dataset.getPath(), modelConfig.getOffset(), dataset.getIsRawImages());
-          }
-          break;
-        case COCO:
-          if (useDummyDataset) {
-            builder.useDummy(NUM_SAMPLES_COCO_DUMMY, INPUT_SIZE_COCO_DUMMY);
-          } else {
+                dataset.getPath(),
+                dataset.getGroundtruthPath(),
+                modelConfig.getOffset(),
+                /*imageWidth=*/ 224,
+                /*imageHeight=*/ 224);
+            break;
+          case COCO:
             builder.useCoco(
                 dataset.getPath(),
+                dataset.getGroundtruthPath(),
                 modelConfig.getOffset(),
-                dataset.getIsRawImages(),
-                dataset.getGroundtruthPath());
-          }
-          break;
+                /*numClasses=*/ 91,
+                /*imageWidth=*/ 300,
+                /*imageHeight=*/ 300);
+            break;
+        }
       }
       MLPerfDriverWrapper driverWrapper = builder.build();
       driverWrapper.runMLPerf(
@@ -106,7 +108,7 @@ public final class RunMLPerfWorker extends Worker {
           taskConfig.getMinDurationMs(),
           outputFolder);
       infTimeList = driverWrapper.getLatency();
-      accuracyList = driverWrapper.getAccuracy(dataset.getGroundtruthPath());
+      accuracyList = driverWrapper.getAccuracy();
     } catch (Exception e) {
       Log.e(TAG, "Failed to run the model: " + e.getMessage());
       Data outputData =

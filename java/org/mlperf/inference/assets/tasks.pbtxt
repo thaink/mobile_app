@@ -6,7 +6,6 @@ task {
     path: "/sdcard/mlperf_datasets/imagenet/img/"
     groundtruth_src: "@assets/imagenet_val.txt"
     groundtruth_path: "/sdcard/mlperf_datasets/imagenet/imagenet_val.txt"
-    is_raw_images: false
   }
   model {
     name: "MobileNets-v1 224 Uint8"
@@ -38,7 +37,6 @@ task {
     path: "/sdcard/mlperf_datasets/coco/img/"
     groundtruth_src: "@assets/coco_val.pbtxt"
     groundtruth_path: "/sdcard/mlperf_datasets/coco/coco_val.pbtxt"
-    is_raw_images: false
   }
   model {
     name: "SSD-MobileNets-v1 Uint8"

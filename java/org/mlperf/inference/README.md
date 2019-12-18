@@ -8,8 +8,8 @@ To build and install the app, do:
 
 ```
 # EVALUATION_APP_PATH=java/org/mlperf/inference
-# blaze build -c opt --cxxopt='--std=c++17' --config=android_arm64 //${EVALUATION_APP_PATH}:mlperf_app
-# adb install -r blaze-bin/${EVALUATION_APP_PATH}/mlperf_app.apk
+# bazel build -c opt --cxxopt='--std=c++14' --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a //${EVALUATION_APP_PATH}:mlperf_app
+# adb install -r bazel-bin/${EVALUATION_APP_PATH}/mlperf_app.apk
 ```
 
 Please click on the hamburger menu icon to go to `Settings` and change settings

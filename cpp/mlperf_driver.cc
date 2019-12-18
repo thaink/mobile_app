@@ -20,95 +20,71 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "cpp/backend.h"
 #include "cpp/dataset.h"
-#include "cpp/tasks/utils.h"
-#include "loadgen.h"
-#include "query_sample_library.h"
-#include "system_under_test.h"
-#include "tensorflow/core/platform/logging.h"
-#include "tensorflow/lite/c/common.h"
-#include "tensorflow/lite/tools/evaluation/proto/evaluation_stages.pb.h"
-#include "tensorflow/lite/tools/evaluation/stages/tflite_inference_stage.h"
-#include "test_settings.h"
+#include "cpp/utils.h"
+#include "loadgen/loadgen.h"
+#include "loadgen/query_sample_library.h"
+#include "loadgen/system_under_test.h"
+#include "loadgen/test_settings.h"
 
-namespace tflite {
 namespace mlperf {
+namespace mobile {
 
-TfliteMlperfDriver::TfliteMlperfDriver(std::string model_file_path,
-                                       int num_threads, std::string delegates,
-                                       int expected_input_size,
-                                       int expected_output_size,
-                                       std::unique_ptr<Dataset> dataset)
-    : SystemUnderTest(), QuerySampleLibrary(), dataset_(std::move(dataset)) {
-  evaluation::EvaluationStageConfig inference_config;
-  inference_config.set_name("inference_stage");
-  auto* inference_params = inference_config.mutable_specification()
-                               ->mutable_tflite_inference_params();
-  inference_params->set_invocations_per_run(1);
-  inference_params->set_model_file_path(model_file_path);
-  inference_params->set_num_threads(num_threads);
-  // TODO(b/140356044) support multiple delegates.
-  for (auto delegate : Str2Delegates(delegates)) {
-    inference_params->set_delegate(delegate);
-  }
-
-  inference_stage_.reset(
-      new evaluation::TfliteInferenceStage(inference_config));
-  if (inference_stage_->Init() != kTfLiteOk) {
-    LOG(FATAL) << "Init inference stage failed";
-  }
-  // Validate model inputs and outputs.
-  const evaluation::TfLiteModelInfo* model_info =
-      inference_stage_->GetModelInfo();
-  if (model_info->inputs.size() != expected_input_size ||
-      model_info->outputs.size() != expected_output_size) {
-    LOG(ERROR) << "Model must have " << expected_input_size << " input & "
-               << expected_output_size << " output";
-  }
-}
-
-void TfliteMlperfDriver::IssueQuery(
+void MlperfDriver::IssueQuery(
     const std::vector<::mlperf::QuerySample>& samples) {
-  std::vector<void*> inputs;
-  auto input_type = inference_stage_->GetModelInfo()->inputs[0]->type;
-  for (auto sample : samples) {
-    if (input_type == kTfLiteUInt8) {
-      inputs.push_back(dataset_->GetData<uint8_t>(sample.index, 0)->data());
-    } else if (input_type == kTfLiteInt8) {
-      inputs.push_back(dataset_->GetData<int8_t>(sample.index, 0)->data());
-    } else if (input_type == kTfLiteFloat32) {
-      inputs.push_back(dataset_->GetData<float>(sample.index, 0)->data());
-    }
-    inference_stage_->SetInputs(inputs);
-    if (inference_stage_->Run() != kTfLiteOk) {
-      LOG(FATAL) << "Error while inferencing model";
-    }
+  std::vector<::mlperf::QuerySampleResponse> responses;
+  std::vector<std::vector<uint8_t>> response_data;
+  for (int idx = 0; idx < samples.size(); ++idx) {
+    ::mlperf::QuerySample sample = samples.at(idx);
+    std::vector<void*> inputs = dataset_->GetData(sample.index);
+    backend_->SetInputs(inputs);
+    backend_->IssueQuery();
+
     // Report to mlperf.
-    std::vector<::mlperf::QuerySampleResponse> responses;
-    std::vector<uint8_t> ans = dataset_->ProcessOutput(
-        sample.index, inference_stage_->GetModelInfo()->outputs);
+    std::vector<void*> outputs = backend_->GetPredictedOutputs();
+    response_data.push_back(dataset_->ProcessOutput(sample.index, outputs));
     responses.push_back(
-        {sample.id, reinterpret_cast<std::uintptr_t>(ans.data()), ans.size()});
-    ::mlperf::QuerySamplesComplete(responses.data(), responses.size());
+        {sample.id, reinterpret_cast<std::uintptr_t>(response_data[idx].data()),
+         response_data[idx].size()});
   }
+  ::mlperf::QuerySamplesComplete(responses.data(), responses.size());
 }
 
-void TfliteMlperfDriver::StartMLPerfTest(std::string mode, int min_query_count,
-                                         int min_duration,
-                                         std::string output_dir) {
+void MlperfDriver::RunMLPerfTest(const std::string& mode, int min_query_count,
+                                 int min_duration,
+                                 const std::string& output_dir) {
   // Setting the mlperf configs.
   ::mlperf::TestSettings mlperf_settings;
   mlperf_settings.scenario = ::mlperf::TestScenario::SingleStream;
-  mlperf_settings.mode = Str2TestMode(mode);
   mlperf_settings.single_stream_expected_latency_ns = 1000000;
   mlperf_settings.min_query_count = min_query_count;
   mlperf_settings.min_duration_ms = min_duration;
   ::mlperf::LogSettings log_settings;
   log_settings.log_output.outdir = output_dir;
+  log_settings.log_output.copy_summary_to_stdout = true;
 
   // Start the test.
-  ::mlperf::StartTest(this, this, mlperf_settings, log_settings);
+  switch (Str2TestMode(mode)) {
+    case TestMode::SubmissionRun:
+      mlperf_settings.mode = TestMode::AccuracyOnly;
+      ::mlperf::StartTest(this, dataset_.get(), mlperf_settings, log_settings);
+      mlperf_settings.mode = TestMode::PerformanceOnly;
+      ::mlperf::StartTest(this, dataset_.get(), mlperf_settings, log_settings);
+      break;
+    case TestMode::AccuracyOnly:
+      mlperf_settings.mode = TestMode::AccuracyOnly;
+      ::mlperf::StartTest(this, dataset_.get(), mlperf_settings, log_settings);
+      break;
+    case TestMode::PerformanceOnly:
+      mlperf_settings.mode = TestMode::PerformanceOnly;
+      ::mlperf::StartTest(this, dataset_.get(), mlperf_settings, log_settings);
+      break;
+    case TestMode::FindPeakPerformance:
+      LOG(FATAL) << "FindPeakPerformance mode is not supported";
+      break;
+  }
 }
 
+}  // namespace mobile
 }  // namespace mlperf
-}  // namespace tflite

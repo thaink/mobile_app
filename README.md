@@ -61,7 +61,7 @@ export ANDROID_NDK_HOME=Path/to/NDK # Ex: $ANDROID_HOME/ndk/(your version)
 The app can be built with the following command:
 
 ```bash
-bazel build -c opt --cxxopt='--std=c++14' --config=android_arm64 //java/org/mlperf/inference:mlperf_app
+bazel build -c opt --cxxopt='--std=c++14' --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a //java/org/mlperf/inference:mlperf_app
 ```
 
 Please see [these instructions](prebuilt/README.md) for installing and using the
@@ -92,7 +92,7 @@ Please search
 https://groups.google.com/forum/#!forum/mlperf-inference-submitters for
 additional help and related questions.
 
-#### What is the licience for embedded tflite models?
+#### What is the license for embedded tflite models?
 
-The licience of those models belongs to the Tensorflow team. Please contact them
+The license of those models belongs to the Tensorflow team. Please contact them
 for more details.

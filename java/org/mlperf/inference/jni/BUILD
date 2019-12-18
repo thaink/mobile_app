@@ -23,6 +23,7 @@ package(
 cc_library(
     name = "mlperf_jni",
     srcs = [
+        "backend_jni.cc",
         "dataset_jni.cc",
         "mlperf_driver_jni.cc",
     ],
@@ -32,11 +33,11 @@ cc_library(
         "-ldl",
     ],
     deps = [
-        "//cpp:tfl_mlperf",
-        "//cpp/tasks/coco_object_detection:coco",
-        "//cpp/tasks/dummy_dataset",
-        "//cpp/tasks/imagenet_classification:imagenet",
-        "@org_tensorflow//tensorflow/lite/c:common",
+        "//cpp:mlperf_driver",
+        "//cpp/backends:tflite",
+        "//cpp/datasets:coco",
+        "//cpp/datasets:dummy_dataset",
+        "//cpp/datasets:imagenet",
         "@org_tensorflow//tensorflow/lite/java/jni",
         "@org_tensorflow//tensorflow/lite/java/src/main/native",
         "@org_tensorflow//tensorflow/lite/java/src/main/native:native_framework_only",
