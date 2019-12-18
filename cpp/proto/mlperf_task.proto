@@ -65,8 +65,6 @@ message DatasetConfig {
   // Path to download the ground truth file if groundtruth_path not available.
   // Could be: http, https, or @assets/file (for files embedded in assets).
   optional string groundtruth_src = 5;
-  // True if images in this dataset is raw.
-  optional bool is_raw_images = 6 [default = false];
 }
 
 // Config of a model.

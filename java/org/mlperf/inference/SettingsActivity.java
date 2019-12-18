@@ -43,7 +43,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
    * A preference value change listener that updates the preference's summary to reflect its new
    * value.
    */
-  private static boolean bindpreferencesummarytovaluelistener(Preference preference, Object value) {
+  private static boolean bindPreferenceSummaryToValueListener(Preference preference, Object value) {
     String stringValue = value.toString();
     preference.setSummary(stringValue);
     return true;
@@ -60,11 +60,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
   private static void bindPreferenceSummaryToValue(Preference preference) {
     // Set the listener to watch for value changes.
     preference.setOnPreferenceChangeListener(
-        SettingsActivity::bindpreferencesummarytovaluelistener);
+        SettingsActivity::bindPreferenceSummaryToValueListener);
 
     // Trigger the listener immediately with the preference's
     // current value.
-    bindpreferencesummarytovaluelistener(
+    bindPreferenceSummaryToValueListener(
         preference,
         PreferenceManager.getDefaultSharedPreferences(preference.getContext())
             .getString(preference.getKey(), ""));

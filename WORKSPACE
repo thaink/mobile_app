@@ -100,7 +100,7 @@ http_archive(
     patch_args = ["-p1"],
     patches = ["@//third_party:mlperf_loadgen/loadgen.patch"],
     sha256 = "dd5455d037da75be7b48f290cd9aaa6c9a510ecf09fa2ca5e8d28e3af6e30a44",
-    strip_prefix = "inference-876c6e2e390b188d69675a59a71360ab39007bde/loadgen",
+    strip_prefix = "inference-876c6e2e390b188d69675a59a71360ab39007bde",
     urls = [
         "https://mirror.bazel.build/github.com/mlperf/inference/archive/876c6e2e390b188d69675a59a71360ab39007bde.tar.gz",
         "https://github.com/mlperf/inference/archive/876c6e2e390b188d69675a59a71360ab39007bde.tar.gz",

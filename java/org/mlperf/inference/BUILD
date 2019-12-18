@@ -30,8 +30,8 @@ text_to_bin(
     name = "tasks.pb",
     src = "assets/tasks.pbtxt",
     out = "res/raw/tasks_pb",
-    proto_file = "//cpp/proto:mlperf_task.proto",
-    proto_name = "org.mlperf.proto.MLPerfConfig",
+    proto_deps = ["//cpp/proto:mlperf_task_java_proto"],
+    proto_message = "org.mlperf.proto.MLPerfConfig",
 )
 
 android_library(
@@ -55,6 +55,7 @@ android_library(
         "//third_party:androidx_material",
         "//third_party:androidx_recyclerview",
         "//third_party:androidx_work",
+        "@com_google_protobuf//:protobuf_lite",
     ],
 )
 
@@ -107,6 +108,7 @@ android_library(
         ":utils",
         "//third_party:androidx_annotation",
         "//third_party:androidx_work",
+        "@com_google_protobuf//:protobuf_lite",
     ],
 )
 

@@ -22,15 +22,8 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
    * managed and deleted by TfliteMlperfDriver. Letting it to be initialized outside this class can
    * lead to various memory management problems.
    */
-  private MLPerfDriverWrapper(
-      String modelFilePath,
-      long datasetHandle,
-      int numThreads,
-      String delegate,
-      int numInput,
-      int numOutput) {
-    driverHandle =
-        nativeInit(modelFilePath, datasetHandle, numThreads, delegate, numInput, numOutput);
+  private MLPerfDriverWrapper(long datasetHandle, long backendHandle) {
+    driverHandle = nativeInit(datasetHandle, backendHandle);
   }
 
   /**
@@ -52,10 +45,9 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
   }
 
   // The groundtruth file and format of the accuracy string is up to tasks.
-  // Ex: mobilenet image classification on imagenet requires gtFile as imagenet_val.txt and
-  // returns accuracy as 12.34%.
-  public String getAccuracy(String gtFile) {
-    return nativeGetAccuracy(this.driverHandle, gtFile);
+  // Ex: mobilenet image classification returns accuracy as 12.34%.
+  public String getAccuracy() {
+    return nativeGetAccuracy(this.driverHandle);
   }
 
   @Override
@@ -64,20 +56,14 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
   }
 
   // Native functions.
-  private native long nativeInit(
-      String modelFilePath,
-      long datasetHandle,
-      int numThread,
-      String delegate,
-      int numInput,
-      int numOutput);
+  private native long nativeInit(long datasetHandle, long backendHandle);
 
   private native void nativeRun(
       long driverHandle, String jmode, int minQueryCount, int minDuration, String outputDir);
 
   private native String nativeGetLatency(long handle);
 
-  private native String nativeGetAccuracy(long handle, String gtFile);
+  private native String nativeGetAccuracy(long handle);
 
   // Nullness of the pointer is checked inside nativeDelete. Callers can skip that check.
   private native void nativeDelete(long handle);
@@ -87,14 +73,34 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
   private static native void nativeDeleteDataset(long handle);
 
   // Return a pointer of a new Imagenet C++ object.
-  private static native long imagenet(String imageDir, int offset, Boolean isRawImages);
+  private static native long imagenet(
+      long backendHandle,
+      String imageDir,
+      String groundtruthFile,
+      int offset,
+      int imageWidth,
+      int imageHeight);
 
   // Return a pointer of a new Coco C++ object.
   private static native long coco(
-      String imageDir, int offset, Boolean isRawImages, String groundtruthFile);
+      long backendHandle,
+      String imageDir,
+      String groundtruthFile,
+      int offset,
+      int numClasses,
+      int imageWidth,
+      int imageHeight);
 
   // Return a pointer of a new DummyDataset C++ object.
-  private static native long dummyDataset(int numSamples, int inputSize);
+  private static native long dummyDataset(long backendHandle);
+
+  // Native functions for backend manipulation. Nullness of the pointer is checked
+  // inside nativeDeleteBackend. Callers can skip that check.
+  private static native void nativeDeleteBackend(long handle);
+
+  // Return a pointer of a new TfliteBackend object.
+  private static native long tflite(
+      String modelFilePath, int numThreads, String delegate, int numInputs, int numOutputs);
 
   // driverHandle holds a pointer of TfliteMlperfDriver.
   private final long driverHandle;
@@ -105,71 +111,73 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
    * <p>The dataset should be set by one of the functions like: useImagenet,...
    */
   public static class Builder implements AutoCloseable {
-    private final String modelFilePath;
-    private final int numInput;
-    private final int numOutput;
-    private int numThreads;
-    private String delegate;
-    private long dataset;
+    private long backend = 0;
+    private long dataset = 0;
 
-    public Builder(String path, int numInput, int numOutput) {
-      modelFilePath = path;
-      this.numInput = numInput;
-      this.numOutput = numOutput;
-      dataset = 0;
-    }
+    public Builder() {}
 
-    Builder setNumThreads(int numThreads) {
-      this.numThreads = numThreads;
-      return this;
-    }
-
-    Builder setDelegate(String delegate) {
-      this.delegate = delegate;
+    public Builder useTfliteBackend(
+        String modelFilePath, int numThreads, String delegate, int numInputs, int numOutputs) {
+      nativeDeleteBackend(backend);
+      backend = tflite(modelFilePath, numThreads, delegate, numInputs, numOutputs);
       return this;
     }
 
     // Offset is used to match ground-truth categories with model output.
-    // Some models assume class 0 is background class thus they have offset equals one.
-    // The isRawImages is true, the images are expected to be binary files in the .rgb8 extension.
-    Builder useImagenet(String imageDir, int offset, Boolean isRawImages) {
-      if (dataset != 0) {
-        nativeDeleteDataset(dataset);
-      }
-      dataset = imagenet(imageDir, offset, isRawImages);
+    // Some models assume class 0 is background class thus they have offset=1.
+    public Builder useImagenet(
+        String imageDir, String groundtruthFile, int offset, int imageWidth, int imageHeight) {
+      nativeDeleteDataset(dataset);
+      dataset = imagenet(getBackend(), imageDir, groundtruthFile, offset, imageWidth, imageHeight);
       return this;
     }
 
-    Builder useCoco(String imageDir, int offset, Boolean isRawImages, String groundtruthFile) {
-      if (dataset != 0) {
-        nativeDeleteDataset(dataset);
-      }
-      dataset = coco(imageDir, offset, isRawImages, groundtruthFile);
+    // Some models assume class 0 is null class thus they have offset=1.
+    public Builder useCoco(
+        String imageDir,
+        String groundtruthFile,
+        int offset,
+        int numClasses,
+        int imageWidth,
+        int imageHeight) {
+      nativeDeleteDataset(dataset);
+      dataset =
+          coco(
+              getBackend(), imageDir, groundtruthFile, offset, numClasses, imageWidth, imageHeight);
       return this;
     }
 
-    Builder useDummy(int numSamples, int inputSize) {
-      if (dataset != 0) {
-        nativeDeleteDataset(dataset);
-      }
-      dataset = dummyDataset(numSamples, inputSize);
+    public Builder useDummy() {
+      nativeDeleteDataset(dataset);
+      dataset = dummyDataset(getBackend());
       return this;
     }
 
-    MLPerfDriverWrapper build() {
+    public MLPerfDriverWrapper build() {
+      MLPerfDriverWrapper result = new MLPerfDriverWrapper(getDataset(), getBackend());
+      dataset = 0;
+      backend = 0;
+      return result;
+    }
+
+    private long getBackend() {
+      if (backend == 0) {
+        throw new java.lang.IllegalArgumentException("Backend should be set first");
+      }
+      return backend;
+    }
+
+    private long getDataset() {
       if (dataset == 0) {
         throw new java.lang.IllegalArgumentException("Dataset should be set first");
       }
-      // Move the pointer out of dataset. Equivalent to std::move(dataset).
-      long datasetHandle = dataset;
-      dataset = 0;
-      return new MLPerfDriverWrapper(
-          modelFilePath, datasetHandle, numThreads, delegate, numInput, numOutput);
+      return dataset;
     }
 
     @Override
     public void close() {
       nativeDeleteDataset(dataset);
+      nativeDeleteBackend(backend);
     }
   }
 

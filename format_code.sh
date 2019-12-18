@@ -8,22 +8,22 @@ set -o pipefail
 
 if [ $(git diff --name-only | wc -l) -ne 0 ]; then
   echo "Please stage all changes first. So you can see what changes this script make."
-  #exit 1
+  exit 1
 fi
 
 ls_staged_files () {
   # Don't throw errors if egrep find no match.
-  echo $(git diff --name-only --cached | egrep $1 || true)
+  echo $(git diff --name-only --cached --diff-filter=d | egrep $1 || true)
 }
 
 # Formatting cpp files using clang-format.
-cpp_files= $(ls_staged_files "\.h|\.cc|\.cpp")
+cpp_files=$(ls_staged_files "\.h|\.cc|\.cpp")
 if [ "$cpp_files" ]; then
   clang-format -i --verbose -style=google $cpp_files
 fi
 
 # Formatting build files using buildifier.
-build_files=$(ls_staged_files "WORKSPACE|*BUILD|*\.bzl")
+build_files=$(ls_staged_files "WORKSPACE|*BUILD|*BUILD.bazel|*\.bzl")
 if [ "$build_files" ]; then
   buildifier -v $build_files
 fi

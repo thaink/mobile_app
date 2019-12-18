@@ -21,22 +21,29 @@ package(
 )
 
 cc_library(
-    name = "tfl_mlperf",
-    srcs = [
-        "mlperf_driver.cc",
-    ],
+    name = "mlperf_driver",
+    srcs = ["mlperf_driver.cc"],
     hdrs = [
+        "backend.h",
         "dataset.h",
         "mlperf_driver.h",
     ],
     copts = tflite_copts(),
     deps = [
-        "//cpp/tasks:utils",
-        "@com_google_absl//absl/types:variant",
+        ":utils",
+        "@org_mlperf_inference//:loadgen",
+    ],
+)
+
+cc_library(
+    name = "utils",
+    srcs = [],
+    hdrs = [
+        "utils.h",
+    ],
+    copts = tflite_copts(),
+    deps = [
         "@org_mlperf_inference//:loadgen",
         "@org_tensorflow//tensorflow/core:tflite_portable_logging",
-        "@org_tensorflow//tensorflow/lite/c:common",
-        "@org_tensorflow//tensorflow/lite/tools/evaluation/proto:evaluation_stages_cc_proto",
-        "@org_tensorflow//tensorflow/lite/tools/evaluation/stages:tflite_inference_stage",
     ],
 )
