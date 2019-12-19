@@ -65,7 +65,6 @@ public class MLPerfEvaluation extends AppCompatActivity {
   private static final String PID_TAG = "PID";
   private static final String ASSETS_PREFIX = "@assets/";
 
-  private ProgressBar progressBar;
   private ProgressCount progressCount;
   private TextView taskResultText;
   private View dividerBar;
@@ -98,7 +97,7 @@ public class MLPerfEvaluation extends AppCompatActivity {
     backgroundColor = ContextCompat.getColor(this, R.color.background);
 
     // Set up progress bar and log area.
-    progressBar = findViewById(R.id.progressBar);
+    ProgressBar progressBar = findViewById(R.id.progressBar);
     taskResultText = findViewById(R.id.taskResultText);
     taskResultText.setMovementMethod(new ScrollingMovementMethod());
     dividerBar = findViewById(R.id.divider);

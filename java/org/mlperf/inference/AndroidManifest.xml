@@ -29,7 +29,8 @@
     <activity
         android:name=".SettingsActivity"
         android:label="@string/title_activity_settings"
-        android:parentActivityName=".MLPerfEvaluation">
+        android:parentActivityName=".MLPerfEvaluation"
+        android:exported="false">
       <meta-data
           android:name="android.support.PARENT_ACTIVITY"
           android:value="org.mlperf.inference.MLPerfEvaluation" />

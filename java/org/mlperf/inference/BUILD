@@ -55,7 +55,6 @@ android_library(
         "//third_party:androidx_material",
         "//third_party:androidx_recyclerview",
         "//third_party:androidx_work",
-        "@com_google_protobuf//:protobuf_lite",
     ],
 )
 
@@ -108,7 +107,6 @@ android_library(
         ":utils",
         "//third_party:androidx_annotation",
         "//third_party:androidx_work",
-        "@com_google_protobuf//:protobuf_lite",
     ],
 )
 
