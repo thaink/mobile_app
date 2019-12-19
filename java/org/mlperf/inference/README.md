@@ -7,8 +7,8 @@ This Android app evaluates the on-device MLPerf inference benchmark.
 To build and install the app, do:
 
 ```
-# EVALUATION_APP_PATH=java/org/mlperf/inference
-# bazel build -c opt --cxxopt='--std=c++14' --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a //${EVALUATION_APP_PATH}:mlperf_app
+# EVALUATION_APP_PATH=//java/org/mlperf/inference
+# bazel build -c opt --cxxopt='--std=c++14' --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a ${EVALUATION_APP_PATH}:mlperf_app
 # adb install -r bazel-bin/${EVALUATION_APP_PATH}/mlperf_app.apk
 ```
 

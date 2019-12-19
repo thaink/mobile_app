@@ -11,7 +11,7 @@ run TFLite with the dummy dataset:
 ```bash
 bazel run  -c opt --cxxopt='--std=c++14' \
   --cxxopt='-DBACKEND=TFLITE' --cxxopt='-DDATASET=DUMMY' -- \
-  cpp/binary:main \
+  //cpp/binary:main \
   --mode=SubmissionRun \
   --model_file=<path to the model file> \
   --num_threads=4 \
@@ -27,7 +27,7 @@ Each set of (backend, dataset) has a different set of arguments, so please use
 ```bash
 bazel run  -c opt --cxxopt='--std=c++14' \
   --cxxopt='-DBACKEND=TFLITE' --cxxopt='-DDATASET=DUMMY' -- \
-  cpp/binary:main --help
+  //cpp/binary:main --help
 ```
 
 The supported backends and datasets for this binary is listed in the enum
