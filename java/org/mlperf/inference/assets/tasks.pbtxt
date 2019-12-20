@@ -9,7 +9,7 @@ task {
   }
   model {
     name: "MobileNets-v1 224 Uint8"
-    src: "@assets/mobilenet_v1_1.0_224_quant.tflite"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224_quant.tflite"
     path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224_quant.tflite"
     num_inputs: 1
     num_outputs: 1
@@ -18,7 +18,7 @@ task {
   }
   model {
     name: "MobileNets-v1 224 Float"
-    src: "@assets/mobilenet_v1_1.0_224.tflite"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224.tflite"
     path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224.tflite"
     offset: 1
     num_inputs: 1
@@ -40,7 +40,7 @@ task {
   }
   model {
     name: "SSD-MobileNets-v1 Uint8"
-    src: "@assets/coco_ssd_mobilenet_v1_1.0_quant.tflite"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/coco_ssd_mobilenet_v1_1.0_quant.tflite"
     path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0_quant.tflite"
     num_inputs: 1
     num_outputs: 4
