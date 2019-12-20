@@ -19,6 +19,7 @@
         android:name="org.mlperf.inference.MLPerfEvaluation"
         android:screenOrientation="portrait"
         android:theme="@style/AppThemeNoActionBar"
+        android:launchMode="singleTask"
         android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
