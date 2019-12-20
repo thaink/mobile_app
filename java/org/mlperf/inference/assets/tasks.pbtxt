@@ -47,6 +47,15 @@ task {
     offset: 1
     tags: "uint8"
   }
+  model {
+    name: "SSD-MobileNets-v1 Float"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/coco_ssd_mobilenet_v1_1.0.tflite"
+    path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0.tflite"
+    num_inputs: 1
+    num_outputs: 4
+    offset: 1
+    tags: "float"
+  }
   min_query_count: 100
   min_duration_ms: 1000
 }
