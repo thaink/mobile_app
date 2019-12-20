@@ -48,6 +48,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -479,13 +480,13 @@ public class MLPerfEvaluation extends AppCompatActivity {
       for (TaskConfig task : mlperfTasks.getTaskList()) {
         for (ModelConfig model : task.getModelList()) {
           if (!new File(model.getPath()).canRead()) {
-            new ModelExtractTask(getActivityContext(), mlperfTasks).execute();
+            new ModelExtractTask(MLPerfEvaluation.this, mlperfTasks).execute();
             return false;
           }
         }
         DatasetConfig dataset = task.getDataset();
         if (!new File(dataset.getGroundtruthPath()).canRead()) {
-          new ModelExtractTask(getActivityContext(), mlperfTasks).execute();
+          new ModelExtractTask(MLPerfEvaluation.this, mlperfTasks).execute();
           return false;
         }
       }
@@ -504,17 +505,17 @@ public class MLPerfEvaluation extends AppCompatActivity {
   // they're not available.
   private static class ModelExtractTask extends AsyncTask<Void, Void, Void> {
 
-    private final Context context;
+    private final WeakReference<Context> contextRef;
     private final MLPerfConfig mlperfTasks;
+    private boolean success = true;
 
     public ModelExtractTask(Context context, MLPerfConfig mlperfTasks) {
-      this.context = context;
+      contextRef = new WeakReference<>(context);
       this.mlperfTasks = mlperfTasks;
     }
 
     @Override
     protected Void doInBackground(Void... voids) {
-      boolean success = true;
       for (TaskConfig task : mlperfTasks.getTaskList()) {
         for (ModelConfig model : task.getModelList()) {
           if (!new File(model.getPath()).canRead()) {
@@ -530,9 +531,6 @@ public class MLPerfEvaluation extends AppCompatActivity {
           }
         }
       }
-      if (success) {
-        Log.d(TAG, "All missing files are extracted.");
-      }
       return null;
     }
 
@@ -540,10 +538,12 @@ public class MLPerfEvaluation extends AppCompatActivity {
       File destFile = new File(path);
       Log.d(TAG, "preparing " + destFile.getName());
       destFile.getParentFile().mkdirs();
+      // Extract to a temporary file first, so the app can detects if the extraction failed.
+      File tmpFile = new File(path + ".tmp");
       try {
         InputStream in;
         if (src.startsWith(ASSETS_PREFIX)) {
-          AssetManager assetManager = context.getAssets();
+          AssetManager assetManager = ((MLPerfEvaluation) contextRef.get()).getAssets();
           in = assetManager.open(src.substring(ASSETS_PREFIX.length()));
         } else if (src.startsWith("http://") || src.startsWith("https://")) {
           in = new URL(src).openStream();
@@ -551,8 +551,9 @@ public class MLPerfEvaluation extends AppCompatActivity {
           Log.e(TAG, "malformed path: " + src);
           return false;
         }
-        OutputStream out = new FileOutputStream(path);
+        OutputStream out = new FileOutputStream(tmpFile, /*append=*/ false);
         copyFile(in, out);
+        tmpFile.renameTo(destFile);
       } catch (IOException e) {
         Log.e(TAG, "failed to prepare file: " + path, e);
         return false;
@@ -567,6 +568,20 @@ public class MLPerfEvaluation extends AppCompatActivity {
       int read;
       while ((read = in.read(buffer)) != -1) {
         out.write(buffer, 0, read);
+      }
+    }
+
+    @Override
+    protected void onPreExecute() {
+      ((MLPerfEvaluation) contextRef.get()).logProgress("Extracting missing files...");
+    }
+
+    @Override
+    protected void onPostExecute(Void result) {
+      if (success) {
+        Log.d(TAG, "All missing files are extracted.");
+        ((MLPerfEvaluation) contextRef.get()).logProgress("All missing files are extracted.");
+        ((MLPerfEvaluation) contextRef.get()).setModelIsAvailable();
       }
     }
   }
