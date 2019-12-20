@@ -1,16 +1,15 @@
 workspace(name = "mlperf_app")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 http_archive(
     name = "org_tensorflow",
-    patch_args = ["-p1"],
-    patches = ["@//third_party:org_tensorflow/tf.patch"],
-    sha256 = "d72626a2e533b1a0eae4ca1c9d3b71ced986ba12ed3c55fd57a334271a0b34ee",
-    strip_prefix = "tensorflow-481366eab297011fed94ccc599e27825c905a18c",
+    sha256 = "86e8b1e536eec8c82229cd9e7f253e26c918ebe6581d1e6393f9587f723eccd6",
+    strip_prefix = "tensorflow-e9b9f82d8eca9437dfca31360e20026394cb477f",
     urls = [
-        "https://mirror.bazel.build/github.com/tensorflow/tensorflow/archive/481366eab297011fed94ccc599e27825c905a18c.tar.gz",
-        "https://github.com/tensorflow/tensorflow/archive/481366eab297011fed94ccc599e27825c905a18c.tar.gz",
+        "https://mirror.bazel.build/github.com/tensorflow/tensorflow/archive/e9b9f82d8eca9437dfca31360e20026394cb477f.tar.gz",
+        "https://github.com/tensorflow/tensorflow/archive/e9b9f82d8eca9437dfca31360e20026394cb477f.tar.gz",
     ],
 )
 
@@ -94,17 +93,12 @@ maven_install(
 )
 
 # Other dependencies.
-http_archive(
+new_git_repository(
     name = "org_mlperf_inference",
-    build_file = "@//third_party/mlperf_loadgen:BUILD.bazel",
-    patch_args = ["-p1"],
-    patches = ["@//third_party:mlperf_loadgen/loadgen.patch"],
-    sha256 = "dd5455d037da75be7b48f290cd9aaa6c9a510ecf09fa2ca5e8d28e3af6e30a44",
-    strip_prefix = "inference-876c6e2e390b188d69675a59a71360ab39007bde",
-    urls = [
-        "https://mirror.bazel.build/github.com/mlperf/inference/archive/876c6e2e390b188d69675a59a71360ab39007bde.tar.gz",
-        "https://github.com/mlperf/inference/archive/876c6e2e390b188d69675a59a71360ab39007bde.tar.gz",
-    ],
+    build_file = "@//third_party:loadgen.BUILD",
+    commit = "876c6e2e390b188d69675a59a71360ab39007bde",
+    patch_cmds = ["python loadgen/version_generator.py loadgen/version_generated.cc loadgen"],
+    remote = "https://github.com/mlperf/inference",
 )
 
 http_archive(
