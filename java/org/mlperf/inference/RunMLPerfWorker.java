@@ -20,8 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
-import java.io.IOException;
-import java.io.InputStream;
 import org.mlperf.proto.DatasetConfig;
 import org.mlperf.proto.MLPerfConfig;
 import org.mlperf.proto.ModelConfig;
@@ -38,13 +36,9 @@ public final class RunMLPerfWorker extends Worker {
 
   private final MLPerfConfig mlperfTasks;
 
-  // Same parsing is done in MLPerfEvaluation so it is unlikely to throw an exception here.
-  public RunMLPerfWorker(@NonNull Context context, @NonNull WorkerParameters params)
-      throws IOException {
+  public RunMLPerfWorker(@NonNull Context context, @NonNull WorkerParameters params) {
     super(context, params);
-    InputStream inputStream =
-        getApplicationContext().getResources().openRawResource(R.raw.tasks_pb);
-    mlperfTasks = MLPerfConfig.parseFrom(inputStream);
+    mlperfTasks = MLPerfTasks.getConfig(context);
   }
 
   @Override

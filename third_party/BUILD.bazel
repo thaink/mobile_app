@@ -29,6 +29,7 @@ android_library(
     name = "androidx_appcompat",
     exports = [
         "@maven//:androidx_appcompat_appcompat",
+        "@maven//:androidx_fragment_fragment",
     ],
 )
 
@@ -59,5 +60,12 @@ android_library(
     exports = [
         "@maven//:androidx_lifecycle_lifecycle_livedata_core",
         "@maven//:androidx_recyclerview_recyclerview",
+    ],
+)
+
+android_library(
+    name = "androidx_preference",
+    exports = [
+        "@maven//:androidx_preference_preference",
     ],
 )

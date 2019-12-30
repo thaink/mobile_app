@@ -27,10 +27,19 @@
     4
   </string>
   <string name="pref_loginfo_setting" description="Log Area Setting [CHAR_LIMIT=50]">
-    Log Info
+    Logging Info
   </string>
   <string name="pref_loginfo_key" description="Log Area Pref Key [CHAR_LIMIT=50]">
     loginfo_preference
+  </string>
+  <string name="preferences_models" description="Models Setting [CHAR_LIMIT=50]">
+    Models Preference
+  </string>
+  <string name="models_preference_sum" description="Models Setting Summary [CHAR_LIMIT=50]">
+    Only run selected models
+  </string>
+  <string name="models_preference_key" description="Selecting Models Pref Key [CHAR_LIMIT=50]">
+    selected_models
   </string>
 
   <!-- Values for delegate setting -->

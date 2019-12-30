@@ -15,12 +15,12 @@ limitations under the License.
 
 package org.mlperf.inference;
 
-/** A class that wraps functionality around tflite::mlperf::TfliteMlperfDriver. */
+/** A class that wraps functionality around tflite::mlperf::MlperfDriver. */
 public final class MLPerfDriverWrapper implements AutoCloseable {
   /**
    * MLPerfDriverWrapper constructor is marked as private since the dataset pointer should be hold,
-   * managed and deleted by TfliteMlperfDriver. Letting it to be initialized outside this class can
-   * lead to various memory management problems.
+   * managed and deleted by MlperfDriver. Letting it to be initialized outside this class can lead
+   * to various memory management problems.
    */
   private MLPerfDriverWrapper(long datasetHandle, long backendHandle) {
     driverHandle = nativeInit(datasetHandle, backendHandle);

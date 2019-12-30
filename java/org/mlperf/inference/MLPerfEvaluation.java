@@ -23,7 +23,6 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -35,6 +34,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -53,6 +53,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.mlperf.proto.DatasetConfig;
 import org.mlperf.proto.MLPerfConfig;
@@ -105,24 +106,16 @@ public class MLPerfEvaluation extends AppCompatActivity {
 
     // Set up menu buttons.
     ImageView playButton = findViewById(R.id.action_play);
-    playButton.setOnClickListener(playButtonListener);
+    playButton.setOnClickListener(this::playButtonListener);
     ImageView stopButton = findViewById(R.id.action_stop);
-    stopButton.setOnClickListener(stopButtonListener);
+    stopButton.setOnClickListener(this::stopButtonListener);
     ImageView refreshButton = findViewById(R.id.action_refresh);
-    refreshButton.setOnClickListener(refreshButtonListener);
+    refreshButton.setOnClickListener(this::refreshButtonListener);
     ImageView settingButton = findViewById(R.id.action_settings);
-    settingButton.setOnClickListener(settingButtonListener);
+    settingButton.setOnClickListener(this::settingButtonListener);
 
     // Read tasks from proto file.
-    try {
-      InputStream inputStream =
-          getApplicationContext().getResources().openRawResource(R.raw.tasks_pb);
-      mlperfTasks = MLPerfConfig.parseFrom(inputStream);
-    } catch (IOException e) {
-      Log.e(TAG, "failed to read the proto file", e);
-      logProgress("Failed to load the proto file.");
-      return;
-    }
+    mlperfTasks = MLPerfTasks.getConfig(getApplicationContext());
 
     checkModelIsAvailable();
     progressCount = new ProgressCount(progressBar);
@@ -135,6 +128,16 @@ public class MLPerfEvaluation extends AppCompatActivity {
     }
     SharedPreferences.Editor preferencesEditor = sharedPref.edit();
     preferencesEditor.putInt(PID_TAG, pid);
+    // Running all models by default after installing.
+    if (sharedPref.getStringSet(getString(R.string.models_preference_key), null) == null) {
+      Set<String> allModels = new HashSet<>();
+      for (TaskConfig task : mlperfTasks.getTaskList()) {
+        for (ModelConfig model : task.getModelList()) {
+          allModels.add(model.getName());
+        }
+      }
+      preferencesEditor.putStringSet(getString(R.string.models_preference_key), allModels);
+    }
     preferencesEditor.commit();
   }
 
@@ -176,57 +179,50 @@ public class MLPerfEvaluation extends AppCompatActivity {
     Log.i(TAG, "logProgress: " + msg);
   }
 
-  private final View.OnClickListener playButtonListener =
-      new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          WorkManager.getInstance(MLPerfEvaluation.this).pruneWork();
-          if (checkModelIsAvailable()) {
-            for (int taskIdx = 0; taskIdx < mlperfTasks.getTaskCount(); ++taskIdx) {
-              for (int modelIdx = 0;
-                  modelIdx < mlperfTasks.getTask(taskIdx).getModelCount();
-                  ++modelIdx) {
-                scheduleInference(taskIdx, modelIdx);
-              }
-            }
-          } else {
-            logProgress("models are not available.");
+  private void playButtonListener(View v) {
+    SharedPreferences sharedPref =
+        PreferenceManager.getDefaultSharedPreferences(MLPerfEvaluation.this);
+    Set<String> selectedModels =
+        sharedPref.getStringSet(getString(R.string.models_preference_key), null);
+    if (selectedModels.isEmpty()) {
+      logProgress("No models selected. Please select models in settings.");
+      return;
+    }
+    WorkManager.getInstance(MLPerfEvaluation.this).pruneWork();
+    if (checkModelIsAvailable()) {
+      for (int taskIdx = 0; taskIdx < mlperfTasks.getTaskCount(); ++taskIdx) {
+        TaskConfig task = mlperfTasks.getTask(taskIdx);
+        for (int modelIdx = 0; modelIdx < task.getModelCount(); ++modelIdx) {
+          if (selectedModels.contains(task.getModel(modelIdx).getName())) {
+            scheduleInference(taskIdx, modelIdx);
           }
         }
-      };
+      }
+    } else {
+      logProgress("Models are not available.");
+    }
+  }
 
-  private final View.OnClickListener stopButtonListener =
-      new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          // Multiple MLPerf tasks should not be runned at the same time (currently, it will crash
-          // and it is also not good for the performance). So the running task should not be
-          // canceled; because in that case, the completion of that task cannot be tracked. Only
-          // tasks in queue will be canceled.
-          for (UUID workerID : workerInQueue) {
-            WorkManager.getInstance(MLPerfEvaluation.this).cancelWorkById(workerID);
-          }
-        }
-      };
+  private void stopButtonListener(View v) {
+    // Multiple MLPerf tasks should not be runned at the same time (currently, it will crash
+    // and it is also not good for the performance). So the running task should not be
+    // canceled; because in that case, the completion of that task cannot be tracked. Only
+    // tasks in queue will be canceled.
+    for (UUID workerID : workerInQueue) {
+      WorkManager.getInstance(MLPerfEvaluation.this).cancelWorkById(workerID);
+    }
+  }
 
-  private final View.OnClickListener refreshButtonListener =
-      new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          results.clear();
-          resultMap.clear();
-          resultAdapter.notifyDataSetChanged();
-        }
-      };
+  private void refreshButtonListener(View v) {
+    results.clear();
+    resultMap.clear();
+    resultAdapter.notifyDataSetChanged();
+  }
 
-  private final View.OnClickListener settingButtonListener =
-      new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          Intent intent = new Intent(MLPerfEvaluation.this, SettingsActivity.class);
-          startActivityForResult(intent, 0);
-        }
-      };
+  private void settingButtonListener(View v) {
+    Intent intent = new Intent(MLPerfEvaluation.this, SettingsActivity.class);
+    startActivityForResult(intent, 0);
+  }
 
   // Animate to highlight newly changed item in the results.
   private boolean animateBackground(RecyclerView.ViewHolder holder) {
@@ -243,8 +239,7 @@ public class MLPerfEvaluation extends AppCompatActivity {
     bgAnimator.setDuration(4000);
     bgAnimator.start();
     return true;
-  }
-  ;
+  };
 
   // The Animator that uses animateBackground.
   private class ResultItemAnimator extends DefaultItemAnimator {
@@ -536,7 +531,7 @@ public class MLPerfEvaluation extends AppCompatActivity {
 
     private boolean extractFile(String src, String path) {
       File destFile = new File(path);
-      Log.d(TAG, "preparing " + destFile.getName());
+      Log.d(TAG, "Preparing " + destFile.getName());
       destFile.getParentFile().mkdirs();
       // Extract to a temporary file first, so the app can detects if the extraction failed.
       File tmpFile = new File(path + ".tmp");
@@ -548,14 +543,14 @@ public class MLPerfEvaluation extends AppCompatActivity {
         } else if (src.startsWith("http://") || src.startsWith("https://")) {
           in = new URL(src).openStream();
         } else {
-          Log.e(TAG, "malformed path: " + src);
+          Log.e(TAG, "Malformed path: " + src);
           return false;
         }
         OutputStream out = new FileOutputStream(tmpFile, /*append=*/ false);
         copyFile(in, out);
         tmpFile.renameTo(destFile);
       } catch (IOException e) {
-        Log.e(TAG, "failed to prepare file: " + path, e);
+        Log.e(TAG, "Failed to prepare file: " + path, e);
         return false;
       }
 

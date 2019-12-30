@@ -14,18 +14,31 @@ limitations under the License.
 ==============================================================================*/
 package org.mlperf.inference;
 
-import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
-import android.view.MenuItem;
-import androidx.appcompat.app.ActionBar;
-import androidx.core.app.NavUtils;
+import android.text.InputType;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.preference.DialogPreference;
+import androidx.preference.EditTextPreference;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceDialogFragmentCompat;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceScreen;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import java.util.HashSet;
+import java.util.Set;
+import org.mlperf.proto.MLPerfConfig;
+import org.mlperf.proto.ModelConfig;
+import org.mlperf.proto.TaskConfig;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On handset devices,
@@ -37,113 +50,159 @@ import androidx.core.app.NavUtils;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings API Guide</a> for more
  * information on developing a Settings UI.
  */
-public class SettingsActivity extends AppCompatPreferenceActivity {
-
-  /**
-   * A preference value change listener that updates the preference's summary to reflect its new
-   * value.
-   */
-  private static boolean bindPreferenceSummaryToValueListener(Preference preference, Object value) {
-    String stringValue = value.toString();
-    preference.setSummary(stringValue);
-    return true;
-  }
-
-  /**
-   * Binds a preference's summary to its value. More specifically, when the preference's value is
-   * changed, its summary (line of text below the preference title) is updated to reflect the value.
-   * The summary is also immediately updated upon calling this method. The exact display format is
-   * dependent on the type of preference.
-   *
-   * @see #bindPreferenceSummaryToValueListener
-   */
-  private static void bindPreferenceSummaryToValue(Preference preference) {
-    // Set the listener to watch for value changes.
-    preference.setOnPreferenceChangeListener(
-        SettingsActivity::bindPreferenceSummaryToValueListener);
-
-    // Trigger the listener immediately with the preference's
-    // current value.
-    bindPreferenceSummaryToValueListener(
-        preference,
-        PreferenceManager.getDefaultSharedPreferences(preference.getContext())
-            .getString(preference.getKey(), ""));
-  }
-
-  /**
-   * Helper method to determine if the device has an extra-large screen. For example, 10" tablets
-   * are extra-large.
-   */
-  private static boolean isXLargeTablet(Context context) {
-    return (context.getResources().getConfiguration().screenLayout
-            & Configuration.SCREENLAYOUT_SIZE_MASK)
-        >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
-  }
-
+public class SettingsActivity extends AppCompatActivity {
   @Override
-  protected void onCreate(Bundle savedInstanceState) {
+  protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    getFragmentManager()
+    setContentView(R.layout.activity_setting);
+    getSupportFragmentManager()
         .beginTransaction()
-        .replace(android.R.id.content, new ModelPreferenceFragment())
+        .replace(R.id.settings_container, new MLPerfPreferenceFragment())
         .commit();
-    setupActionBar();
   }
 
-  /** Set up the {@link android.app.ActionBar}, if the API is available. */
-  private void setupActionBar() {
-    ActionBar actionBar = getSupportActionBar();
-    if (actionBar != null) {
-      // Show the Up button in the action bar.
-      actionBar.setDisplayHomeAsUpEnabled(true);
+  /** This fragment shows preferences only. */
+  public static class MLPerfPreferenceFragment extends PreferenceFragmentCompat {
+    @Override
+    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+      setPreferencesFromResource(R.xml.pref_model, rootKey);
+
+      // Only allow inputting number in the preference for number of threads.
+      EditTextPreference numThreadsPreference =
+          getPreferenceManager().findPreference(getString(R.string.num_threads_key));
+      numThreadsPreference.setOnBindEditTextListener(
+          new EditTextPreference.OnBindEditTextListener() {
+            @Override
+            public void onBindEditText(@NonNull EditText editText) {
+              editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+            }
+          });
+
+      // Add a new ModelsPreference.
+      PreferenceScreen screen = getPreferenceScreen();
+      ModelsPreference modelsPref = new ModelsPreference(getContext());
+      modelsPref.setKey(getString(R.string.models_preference_key));
+      modelsPref.setTitle(getString(R.string.preferences_models));
+      modelsPref.setSummary(getString(R.string.models_preference_sum));
+      modelsPref.setDialogTitle(getString(R.string.preferences_models));
+      modelsPref.setIconSpaceReserved(false);
+      modelsPref.setPersistent(true);
+      screen.addPreference(modelsPref);
     }
-  }
-
-  @Override
-  public boolean onMenuItemSelected(int featureId, MenuItem item) {
-    int id = item.getItemId();
-    if (id == android.R.id.home) {
-      if (!super.onMenuItemSelected(featureId, item)) {
-        NavUtils.navigateUpFromSameTask(this);
-      }
-      return true;
-    }
-    return super.onMenuItemSelected(featureId, item);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public boolean onIsMultiPane() {
-    return isXLargeTablet(this);
-  }
-
-  /**
-   * This method stops fragment injection in malicious applications. Make sure to deny any unknown
-   * fragments here.
-   */
-  @Override
-  protected boolean isValidFragment(String fragmentName) {
-    return PreferenceFragment.class.getName().equals(fragmentName)
-        || ModelPreferenceFragment.class.getName().equals(fragmentName);
-  }
-
-  /**
-   * This fragment shows model preferences only. It is used when the activity is showing a two-pane
-   * settings UI.
-   */
-  @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-  public static class ModelPreferenceFragment extends PreferenceFragment {
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-      addPreferencesFromResource(R.xml.pref_model);
+    public void onDisplayPreferenceDialog(Preference preference) {
+      if (preference instanceof ModelsPreference) {
+        ((ModelsPreference) preference).showDialog(this);
+      } else {
+        super.onDisplayPreferenceDialog(preference);
+      }
+    }
+  }
 
-      // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-      // to their values. When their values change, their summaries are
-      // updated to reflect the new value, per the Android Design
-      // guidelines.
-      bindPreferenceSummaryToValue(findPreference("num_threads"));
+  /** Preference for selecting models. */
+  private static class ModelsPreference extends DialogPreference {
+    public ModelsPreference(Context context) {
+      super(context);
+      super.setPersistent(false);
+      super.setNegativeButtonText(android.R.string.cancel);
+      super.setPositiveButtonText(android.R.string.ok);
+      setDialogLayoutResource(R.layout.models_pref);
+    }
+
+    public void showDialog(Fragment target) {
+      ModelsPreferenceDialogFragment fragment =
+          ModelsPreferenceDialogFragment.newInstance(
+              target.getContext(), getKey(), new HashSet<>(getPersistedStringSet(null)));
+      fragment.setTargetFragment(target, 0);
+      fragment.show(target.getFragmentManager(), "androidx.preference.PreferenceFragment.DIALOG");
+    }
+
+    public void setModels(Set<String> selectedModels) {
+      if (selectedModels.equals(getPersistedStringSet(null))) {
+        return;
+      }
+      persistStringSet(selectedModels);
+      notifyChanged();
+    }
+  }
+
+  /** This fragment shows ModelsPreference in a dialog. */
+  public static class ModelsPreferenceDialogFragment extends PreferenceDialogFragmentCompat {
+    private MLPerfConfig mlperfTasks;
+    private Context context;
+    private Set<String> selectedModels;
+
+    public static ModelsPreferenceDialogFragment newInstance(
+        Context context, String key, Set<String> models) {
+      ModelsPreferenceDialogFragment fragment = new ModelsPreferenceDialogFragment();
+      fragment.context = context;
+      fragment.selectedModels = models;
+      fragment.mlperfTasks = MLPerfTasks.getConfig(context);
+      Bundle bundle = new Bundle(1);
+      bundle.putString(ARG_KEY, key);
+      fragment.setArguments(bundle);
+      return fragment;
+    }
+
+    @Override
+    protected void onBindDialogView(View view) {
+      super.onBindDialogView(view);
+      LinearLayout prefLayout = (LinearLayout) view.findViewById(R.id.container);
+      LayoutInflater inflater = LayoutInflater.from(context);
+      for (TaskConfig task : mlperfTasks.getTaskList()) {
+        // Add a switch to select or deselect all models in a task.
+        View taskView = inflater.inflate(R.layout.models_group, prefLayout, false);
+        SwitchMaterial taskSwitch = (SwitchMaterial) taskView.findViewById(R.id.tasksSwitch);
+        taskSwitch.setText(task.getName());
+        ChipGroup modelsGroup = (ChipGroup) taskView.findViewById(R.id.modelsGroup);
+        // Add models of that task as chips.
+        for (ModelConfig model : task.getModelList()) {
+          Chip modelchip = (Chip) inflater.inflate(R.layout.models_item, modelsGroup, false);
+          String modelName = model.getName();
+          modelchip.setText(model.getTags());
+          modelchip.setOnCheckedChangeListener(
+              (chipView, isChecked) -> {
+                // The switch is on if all models are selected.
+                if (isChecked) {
+                  taskSwitch.setChecked(true);
+                  selectedModels.add(modelName);
+                } else {
+                  selectedModels.remove(modelName);
+                }
+                if (modelsGroup.getCheckedChipIds().isEmpty()) {
+                  taskSwitch.setChecked(false);
+                }
+              });
+          if (selectedModels.contains(modelName)) {
+            modelchip.setChecked(true);
+            taskSwitch.setChecked(true);
+          }
+          modelsGroup.addView(modelchip);
+        }
+        // Toggle models based on the task switch status.
+        taskSwitch.setOnClickListener(
+            (switchView) -> {
+              if (((SwitchMaterial) switchView).isChecked()) {
+                // Set all models of this task as checked.
+                for (int idx = 0; idx < modelsGroup.getChildCount(); ++idx) {
+                  Chip chip = (Chip) modelsGroup.getChildAt(idx);
+                  chip.setChecked(true);
+                }
+              } else {
+                modelsGroup.clearCheck();
+              }
+            });
+        prefLayout.addView(taskView);
+      }
+    }
+
+    @Override
+    public void onDialogClosed(boolean positiveResult) {
+      if (!positiveResult) {
+        return;
+      }
+      ((ModelsPreference) getPreference()).setModels(selectedModels);
     }
   }
 }

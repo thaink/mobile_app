@@ -37,14 +37,13 @@ text_to_bin(
 android_library(
     name = "evaluation_app_lib",
     srcs = [
-        "AppCompatPreferenceActivity.java",
         "MLPerfEvaluation.java",
         "ResultHolder.java",
         "ResultsAdapter.java",
         "SettingsActivity.java",
     ],
     manifest = "AndroidManifest.xml",
-    resource_files = [":tasks.pb"] + glob(["res/**"]),
+    resource_files = glob(["res/**"]),
     deps = [
         ":mlperf_task_java_proto_lite",
         ":mlperf_worker",
@@ -53,6 +52,7 @@ android_library(
         "//third_party:androidx_appcompat",
         "//third_party:androidx_constraint_layout",
         "//third_party:androidx_material",
+        "//third_party:androidx_preference",
         "//third_party:androidx_recyclerview",
         "//third_party:androidx_work",
     ],
@@ -90,8 +90,11 @@ android_library(
     name = "utils",
     srcs = [
         "Constants.java",
+        "MLPerfTasks.java",
     ],
     manifest = "AndroidManifest.xml",
+    resource_files = [":tasks.pb"],
+    deps = [":mlperf_task_java_proto_lite"],
 )
 
 android_library(
@@ -100,7 +103,6 @@ android_library(
         "RunMLPerfWorker.java",
     ],
     manifest = "AndroidManifest.xml",
-    resource_files = [":tasks.pb"],
     deps = [
         ":jni_wrapper",
         ":mlperf_task_java_proto_lite",
