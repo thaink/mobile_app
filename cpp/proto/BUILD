@@ -32,11 +32,6 @@ proto_library(
     visibility = ["//visibility:public"],
 )
 
-cc_proto_library(
-    name = "mlperf_task_cc_proto",
-    deps = ["mlperf_task_proto"],
-)
-
 java_proto_library(
     name = "mlperf_task_java_proto",
     deps = ["mlperf_task_proto"],

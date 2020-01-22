@@ -13,12 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 
-load("@org_tensorflow//tensorflow/lite:build_def.bzl", "tflite_copts")
+load("@org_tensorflow//tensorflow/lite:build_def.bzl", "tflite_copts", "tflite_linkopts")
 
 package(
     default_visibility = ["//visibility:public"],
     licenses = ["notice"],  # Apache 2.0
 )
+
+common_linkopts = tflite_linkopts() + select({
+    "//conditions:default": [],
+    "@org_tensorflow//tensorflow:android": [
+        "-pie",
+    ],
+})
 
 cc_library(
     name = "mlperf_driver",
@@ -45,5 +52,16 @@ cc_library(
     deps = [
         "@org_mlperf_inference//:loadgen",
         "@org_tensorflow//tensorflow/core:tflite_portable_logging",
+    ],
+)
+
+cc_test(
+    name = "utils_test",
+    srcs = ["utils_test.cc"],
+    linkopts = common_linkopts,
+    linkstatic = 1,
+    deps = [
+        ":utils",
+        "@com_google_googletest//:gtest",
     ],
 )

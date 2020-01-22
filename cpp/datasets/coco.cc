@@ -201,8 +201,9 @@ float Coco::ComputeAccuracy() {
     return 0.0f;
   }
 
-  for (auto& [filename, objects] : predicted_objects_) {
-    eval_stage_.SetEvalInputs(objects, groundtruth_objects[filename]);
+  for (auto const& element : predicted_objects_) {
+    eval_stage_.SetEvalInputs(element.second,
+                              groundtruth_objects[element.first]);
     if (eval_stage_.Run() == kTfLiteError) {
       LOG(ERROR) << "Run evaluation stage failed";
       return 0.0f;

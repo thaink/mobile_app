@@ -164,8 +164,8 @@ float Imagenet::ComputeAccuracy() {
 
   // Read the result in mlpef log file and calculate the accuracy.
   int good = 0;
-  for (auto [sample_idx, class_idx] : predictions_) {
-    if (groundtruth[sample_idx] == class_idx) good++;
+  for (auto const& element : predictions_) {
+    if (groundtruth[element.first] == element.second) good++;
   }
   return static_cast<float>(good) / predictions_.size();
 }
