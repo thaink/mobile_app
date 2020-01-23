@@ -81,23 +81,12 @@ Coco::Coco(const DataFormat& input_format, const DataFormat& output_format,
   samples_ =
       std::vector<std::vector<std::vector<uint8_t>*>>(image_list_.size());
   // Prepares the preprocessing stage.
-  std::string image_ext =
-      image_list_.at(0).substr(image_list_.at(0).find_last_of("."));
-  bool is_raw_image = (image_ext == ".rgb8");
-  tflite::evaluation::EvaluationStageConfig preprocessing_config;
-  preprocessing_config.set_name("image_preprocessing");
-  // Expecting resized images, png format seems to give better accuracy.
-  auto* preprocess_params = preprocessing_config.mutable_specification()
-                                ->mutable_image_preprocessing_params();
-  preprocess_params->set_image_height(image_height);
-  preprocess_params->set_image_width(image_width);
-  preprocess_params->set_aspect_preserving(true);
-  preprocess_params->set_cropping_fraction(1.0);
-  preprocess_params->set_output_type(
-      static_cast<int>(DataType2TfType(input_format_.at(0).type)));
-  preprocess_params->set_load_raw_images(is_raw_image);
+  tflite::evaluation::ImagePreprocessingConfigBuilder builder(
+      "image_preprocessing", DataType2TfType(input_format_.at(0).type));
+  builder.AddResizingStep(image_width, image_height, false);
+  builder.AddDefaultNormalizationStep();
   preprocessing_stage_.reset(
-      new tflite::evaluation::ImagePreprocessingStage(preprocessing_config));
+      new tflite::evaluation::ImagePreprocessingStage(builder.build()));
   if (preprocessing_stage_->Init() != kTfLiteOk) {
     LOG(FATAL) << "Failed to init preprocessing stage";
   }

@@ -239,7 +239,7 @@ public class MLPerfEvaluation extends AppCompatActivity {
     bgAnimator.setDuration(4000);
     bgAnimator.start();
     return true;
-  };
+  }
 
   // The Animator that uses animateBackground.
   private class ResultItemAnimator extends DefaultItemAnimator {
