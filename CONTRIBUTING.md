@@ -40,29 +40,36 @@ just getting started, Github has a [howto](https://help.github.com/articles/usin
 
 Include a license at the top of new files.
 
-* [C/C++ license example](https://github.com/mlperf/policies/blob/master/license_example_DRAFT.cpp)
-* [Python license example](https://github.com/mlperf/policies/blob/master/license_example_DRAFT.py)
+*   [C/C++ license example](https://github.com/mlperf/policies/blob/master/license_example.cpp)
+*   [Java license example](https://github.com/mlperf/policies/blob/master/license_example.cpp)
 
-#### C++ coding style
+#### Coding styles
 
-The code was originally contributed by Google so it conforms to the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+The code was originally contributed by Google so it conforms to the
+[Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) and
+[Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
 
-Use the `clang-format` to check your C/C++ changes. To install `clang-format`, do:
+The `format_code.sh` script is the convinent way to format your files. It uses the
+[clang-format](https://clang.llvm.org/docs/ClangFormat.html) for checking your C/C++ files,
+[buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) for bazel files and
+[google-java-format](https://github.com/google/google-java-format) for Javafiles.
+To install its dependencies, do:
 
 ```bash
 sudo apt install clang-format
+go get github.com/bazelbuild/buildtools/buildifier
 ```
 
-You can also check C/C++ files by running the `format_code.sh` script (recommended):
+Then you can format your files by running:
 ```bash
 bash format_code.sh
 ```
 
-The script also checks the format of modified bazel build files using [buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier).
-
-#### Python coding style
-
-(Note: Technical details TBD by community.)
+Optionally, you can add it to pre-commit hook by running:
+```bash
+sed -i -e '$a\' -e 'bash `git rev-parse --show-toplevel`/format_code.sh && git add *' \
+-e "/format_code.sh/d" .git/hooks/pre-commit
+```
 
 #### Running sanity check
 
