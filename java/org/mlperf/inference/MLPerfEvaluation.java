@@ -23,6 +23,10 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
+import android.os.Messenger;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -33,16 +37,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.work.Data;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -54,17 +52,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import org.mlperf.proto.DatasetConfig;
 import org.mlperf.proto.MLPerfConfig;
 import org.mlperf.proto.ModelConfig;
 import org.mlperf.proto.TaskConfig;
 
 /** {@link MLPerfEvaluation} evaluates models on MLPerf benchmark. */
-public class MLPerfEvaluation extends AppCompatActivity {
+public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callback {
   private static final String TAG = "MLPerfEvaluation";
-  private static final String WORKER_NAME = "MLPerfInferenceWorker";
-  private static final String PID_TAG = "PID";
   private static final String ASSETS_PREFIX = "@assets/";
 
   private ProgressCount progressCount;
@@ -73,7 +68,7 @@ public class MLPerfEvaluation extends AppCompatActivity {
   private RecyclerView resultRecyclerView;
   private ResultsAdapter resultAdapter;
   private final ArrayList<ResultHolder> results = new ArrayList<>();
-  HashMap<String, Integer> resultMap = new HashMap<>();
+  private final HashMap<String, Integer> resultMap = new HashMap<>();
 
   private String interpreterDelegate;
   private int numThreadsPreference;
@@ -81,15 +76,19 @@ public class MLPerfEvaluation extends AppCompatActivity {
   private int backgroundColor;
 
   private MLPerfConfig mlperfTasks;
-  private final HashSet<UUID> workerInQueue = new HashSet<>();
+  private HandlerThread workerThread;
+  private RunMLPerfWorker workerHandler;
+  private Messenger replyMessenger;
+
   private boolean modelIsAvailable = false;
+  private SharedPreferences sharedPref;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    // Set up the RecyclerView which shows results.
+    // Sets up the RecyclerView which shows results.
     resultRecyclerView = findViewById(R.id.results_recycler_view);
     resultRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     resultRecyclerView.setItemAnimator(new ResultItemAnimator());
@@ -98,13 +97,13 @@ public class MLPerfEvaluation extends AppCompatActivity {
     highLightColor = ContextCompat.getColor(this, R.color.mlperfBlue);
     backgroundColor = ContextCompat.getColor(this, R.color.background);
 
-    // Set up progress bar and log area.
+    // Sets up progress bar and log area.
     ProgressBar progressBar = findViewById(R.id.progressBar);
     taskResultText = findViewById(R.id.taskResultText);
     taskResultText.setMovementMethod(new ScrollingMovementMethod());
     dividerBar = findViewById(R.id.divider);
 
-    // Set up menu buttons.
+    // Sets up menu buttons.
     ImageView playButton = findViewById(R.id.action_play);
     playButton.setOnClickListener(this::playButtonListener);
     ImageView stopButton = findViewById(R.id.action_stop);
@@ -114,22 +113,13 @@ public class MLPerfEvaluation extends AppCompatActivity {
     ImageView settingButton = findViewById(R.id.action_settings);
     settingButton.setOnClickListener(this::settingButtonListener);
 
-    // Read tasks from proto file.
+    // Reads tasks from proto file.
     mlperfTasks = MLPerfTasks.getConfig(getApplicationContext());
 
-    checkModelIsAvailable();
-    progressCount = new ProgressCount(progressBar);
-    // When a task was running, onDestroy might not be called when the previous session ended;
-    // Instead the process get killed. Cancel all tasks of the previous session in such case.
-    int pid = android.os.Process.myPid();
-    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-    if (pid != sharedPref.getInt(PID_TAG, -1)) {
-      WorkManager.getInstance(MLPerfEvaluation.this).cancelUniqueWork(WORKER_NAME);
-    }
-    SharedPreferences.Editor preferencesEditor = sharedPref.edit();
-    preferencesEditor.putInt(PID_TAG, pid);
-    // Running all models by default after installing.
+    // Runs all models by default after installing.
+    sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
     if (sharedPref.getStringSet(getString(R.string.models_preference_key), null) == null) {
+      SharedPreferences.Editor preferencesEditor = sharedPref.edit();
       Set<String> allModels = new HashSet<>();
       for (TaskConfig task : mlperfTasks.getTaskList()) {
         for (ModelConfig model : task.getModelList()) {
@@ -137,15 +127,21 @@ public class MLPerfEvaluation extends AppCompatActivity {
         }
       }
       preferencesEditor.putStringSet(getString(R.string.models_preference_key), allModels);
+      preferencesEditor.commit();
     }
-    preferencesEditor.commit();
+
+    // Handles the result from RunMLPerfWorker.
+    replyMessenger = new Messenger(new Handler(this.getMainLooper(), this));
+
+    // Checks if models are available.
+    checkModelIsAvailable();
+    progressCount = new ProgressCount(progressBar);
   }
 
   @Override
   public void onResume() {
     super.onResume();
-    SharedPreferences sharedPref =
-        PreferenceManager.getDefaultSharedPreferences(MLPerfEvaluation.this);
+    // Updates the shared preference.
     interpreterDelegate =
         sharedPref.getString(
             getString(R.string.pref_delegate_key), getString(R.string.delegate_nnapi));
@@ -173,6 +169,29 @@ public class MLPerfEvaluation extends AppCompatActivity {
     }
   }
 
+  @Override
+  public boolean handleMessage(Message inputMessage) {
+    switch (inputMessage.what) {
+      case RunMLPerfWorker.REPLY_UPDATE:
+        String update = (String) inputMessage.obj;
+        logProgress(update);
+        break;
+      case RunMLPerfWorker.REPLY_COMPLETE:
+        ResultHolder result = (ResultHolder) inputMessage.obj;
+        addNewResult(result);
+        progressCount.increaseProgress();
+        break;
+      case RunMLPerfWorker.REPLY_CANCEL:
+        String message = (String) inputMessage.obj;
+        logProgress(message);
+        progressCount.decreaseTotal();
+        break;
+      default:
+        return false;
+    }
+    return true;
+  }
+
   private void logProgress(String msg) {
     taskResultText.append(System.getProperty("line.separator"));
     taskResultText.append(msg);
@@ -180,16 +199,18 @@ public class MLPerfEvaluation extends AppCompatActivity {
   }
 
   private void playButtonListener(View v) {
-    SharedPreferences sharedPref =
-        PreferenceManager.getDefaultSharedPreferences(MLPerfEvaluation.this);
     Set<String> selectedModels =
         sharedPref.getStringSet(getString(R.string.models_preference_key), null);
     if (selectedModels.isEmpty()) {
       logProgress("No models selected. Please select models in settings.");
       return;
     }
-    WorkManager.getInstance(MLPerfEvaluation.this).pruneWork();
     if (checkModelIsAvailable()) {
+      if (workerThread == null) {
+        workerThread = new HandlerThread("MLPerf.Worker");
+        workerThread.start();
+        workerHandler = new RunMLPerfWorker(this, workerThread.getLooper());
+      }
       for (int taskIdx = 0; taskIdx < mlperfTasks.getTaskCount(); ++taskIdx) {
         TaskConfig task = mlperfTasks.getTask(taskIdx);
         for (int modelIdx = 0; modelIdx < task.getModelCount(); ++modelIdx) {
@@ -204,12 +225,11 @@ public class MLPerfEvaluation extends AppCompatActivity {
   }
 
   private void stopButtonListener(View v) {
-    // Multiple MLPerf tasks should not be runned at the same time (currently, it will crash
-    // and it is also not good for the performance). So the running task should not be
-    // canceled; because in that case, the completion of that task cannot be tracked. Only
-    // tasks in queue will be canceled.
-    for (UUID workerID : workerInQueue) {
-      WorkManager.getInstance(MLPerfEvaluation.this).cancelWorkById(workerID);
+    // Loadgen does not provide any method to stop the current task so the it will get finished.
+    if (workerThread != null) {
+      workerHandler.removeMessages();
+      workerThread.quit();
+      workerThread = null;
     }
   }
 
@@ -217,6 +237,8 @@ public class MLPerfEvaluation extends AppCompatActivity {
     results.clear();
     resultMap.clear();
     resultAdapter.notifyDataSetChanged();
+    // Fix: if an item is updated, the cache of older item is visable after deleting newer one.
+    resultRecyclerView.setLayoutManager(new LinearLayoutManager(this));
   }
 
   private void settingButtonListener(View v) {
@@ -265,80 +287,16 @@ public class MLPerfEvaluation extends AppCompatActivity {
     Log.d(TAG, "scheduleInference " + taskIdx + " , " + modelIdx);
     TaskConfig task = mlperfTasks.getTask(taskIdx);
     final String modelName = task.getModel(modelIdx).getName();
-    DatasetConfig dataset = task.getDataset();
-    boolean useDummyDataSet = !new File(dataset.getPath()).isDirectory();
-    Log.d(TAG, "Checking dataset path " + dataset.getPath() + ": " + !useDummyDataSet);
-    if (useDummyDataSet) {
-      logProgress("Dataset for \"" + modelName + "\" is not available. Dummy dataset is used.");
-    }
-    String outputLogDir =
-        getApplicationContext().getExternalFilesDir("mlperf/" + modelName).getAbsolutePath();
+    String outputLogDir = getExternalFilesDir("mlperf/" + modelName).getAbsolutePath();
     Log.i(TAG, "The mlperf log dir for \"" + modelName + "\" is " + outputLogDir + "/");
-
-    Data taskData =
-        new Data.Builder()
-            .putInt(Constants.TASK_INDEX, taskIdx)
-            .putInt(Constants.MODEL_INDEX, modelIdx)
-            .putInt(Constants.NUM_THREADS, numThreadsPreference)
-            .putString(Constants.DELEGATE, interpreterDelegate)
-            .putString(Constants.OUTPUT_DIR, outputLogDir)
-            .putBoolean(Constants.USE_DUMMY_DATASET, useDummyDataSet)
-            .build();
-    OneTimeWorkRequest mlperfWorkRequest =
-        new OneTimeWorkRequest.Builder(RunMLPerfWorker.class).setInputData(taskData).build();
-    final String runtime = computeRuntimeString(numThreadsPreference, interpreterDelegate);
-
-    // Send and observe the status.
-    WorkManager.getInstance(MLPerfEvaluation.this)
-        .enqueueUniqueWork(WORKER_NAME, ExistingWorkPolicy.APPEND, mlperfWorkRequest);
-    workerInQueue.add(mlperfWorkRequest.getId());
+    RunMLPerfWorker.WorkerData data =
+        new RunMLPerfWorker.WorkerData(
+            taskIdx, modelIdx, numThreadsPreference, interpreterDelegate, outputLogDir);
+    Message msg = workerHandler.obtainMessage(RunMLPerfWorker.MSG_RUN, data);
+    msg.replyTo = replyMessenger;
+    workerHandler.sendMessage(msg);
     progressCount.increaseTotal();
-    WorkManager.getInstance(MLPerfEvaluation.this)
-        .getWorkInfoByIdLiveData(mlperfWorkRequest.getId())
-        .observe(
-            MLPerfEvaluation.this,
-            new Observer<WorkInfo>() {
-              @Override
-              public void onChanged(@Nullable WorkInfo workInfo) {
-                if (workInfo == null) {
-                  return;
-                }
-                switch (workInfo.getState()) {
-                  case BLOCKED:
-                    logProgress("Worker for \"" + modelName + "\" scheduled.");
-                    break;
-                  case FAILED:
-                    Data failData = workInfo.getOutputData();
-                    logProgress(
-                        "Running inference for \""
-                            + modelName
-                            + "\" failed with "
-                            + failData.getString(Constants.ERROR_MESSAGE));
-                    addNewResult(modelName, runtime, "ERR", "ERR");
-                    progressCount.increaseProgress();
-                    break;
-                  case RUNNING:
-                    logProgress("Running inference for \"" + modelName + "\"...");
-                    logProgress(" - runtime: " + runtime);
-                    workerInQueue.remove(workInfo.getId());
-                    break;
-                  case CANCELLED:
-                    logProgress("Canceled worker for \"" + modelName + "\".");
-                    progressCount.decreaseTotal();
-                    break;
-                  case SUCCEEDED:
-                    logProgress("Finished running \"" + modelName + "\".");
-                    Data successData = workInfo.getOutputData();
-                    String infTime = successData.getString(Constants.LATENCY_RESULT);
-                    String accuracy = successData.getString(Constants.ACCURACY_RESULT);
-                    addNewResult(modelName, runtime, infTime, accuracy);
-                    progressCount.increaseProgress();
-                    break;
-                  default:
-                    break;
-                }
-              }
-            });
+    logProgress("Worker for \"" + modelName + "\" scheduled.");
   }
 
   private static class ProgressCount {
@@ -377,23 +335,18 @@ public class MLPerfEvaluation extends AppCompatActivity {
     private final ProgressBar progressBar;
   }
 
-  private void addNewResult(String modelName, String runtime, String infTime, String accuracy) {
-    String key = modelName + runtime;
+  private void addNewResult(ResultHolder result) {
+    String key = result.getModel() + result.getRuntime();
     int resultIdx;
     // If a result of (model, runtime) is already displayed, update it.
     if (resultMap.containsKey(key)) {
       resultIdx = resultMap.get(key);
-      results.get(resultIdx).setRuntime(runtime);
-      results.get(resultIdx).setInferenceLatency(infTime);
-      results.get(resultIdx).setAccuracy(accuracy);
+      results.set(resultIdx, result);
       resultAdapter.notifyItemChanged(resultIdx);
     } else {
       resultIdx = results.size();
       resultMap.put(key, resultIdx);
-      results.add(new ResultHolder(modelName));
-      results.get(resultIdx).setRuntime(runtime);
-      results.get(resultIdx).setInferenceLatency(infTime);
-      results.get(resultIdx).setAccuracy(accuracy);
+      results.add(result);
       resultAdapter.notifyItemInserted(resultIdx);
     }
 
@@ -413,22 +366,6 @@ public class MLPerfEvaluation extends AppCompatActivity {
     resultRecyclerView.smoothScrollToPosition(resultIdx);
   }
 
-  // Build a string to present the runtime setting.
-  private static String computeRuntimeString(int numThreads, String delegate) {
-    StringBuilder runtimeStr = new StringBuilder();
-    if ("none".equalsIgnoreCase(delegate)) {
-      runtimeStr.append("CPU, ");
-      runtimeStr.append(numThreads);
-      runtimeStr.append(" thread");
-      if (numThreads > 1) {
-        runtimeStr.append("s");
-      }
-    } else {
-      runtimeStr.append(delegate);
-    }
-    return runtimeStr.toString();
-  }
-
   public Context getActivityContext() {
     return this;
   }
@@ -436,9 +373,7 @@ public class MLPerfEvaluation extends AppCompatActivity {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    for (UUID workerID : workerInQueue) {
-      WorkManager.getInstance(MLPerfEvaluation.this).cancelWorkById(workerID);
-    }
+    workerThread.quit();
     Log.d(TAG, "onDestroy() is called.");
   }
 

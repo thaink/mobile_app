@@ -15,11 +15,16 @@ limitations under the License.
 package org.mlperf.inference;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.work.Data;
-import androidx.work.Worker;
-import androidx.work.WorkerParameters;
+import java.io.File;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import org.mlperf.proto.DatasetConfig;
 import org.mlperf.proto.MLPerfConfig;
 import org.mlperf.proto.ModelConfig;
@@ -31,48 +36,52 @@ import org.mlperf.proto.TaskConfig;
  * <p>RunMLPerfWorker is designed to run a single model to avoid restarting a big work if
  * terminated.
  */
-public final class RunMLPerfWorker extends Worker {
-  private static final String TAG = "RunMLPerfWorker";
+public final class RunMLPerfWorker implements Handler.Callback {
+  public static final int MSG_RUN = 1;
+  public static final int REPLY_UPDATE = 1;
+  public static final int REPLY_COMPLETE = 2;
+  public static final int REPLY_CANCEL = 3;
+  public static final String TAG = "RunMLPerfWorker";
 
   private final MLPerfConfig mlperfTasks;
+  private final IdentityHashMap<Message, String> waitingMessages;
+  private final Handler handler;
 
-  public RunMLPerfWorker(@NonNull Context context, @NonNull WorkerParameters params) {
-    super(context, params);
+  public RunMLPerfWorker(@NonNull Context context, @NonNull Looper looper) {
     mlperfTasks = MLPerfTasks.getConfig(context);
+    waitingMessages = new IdentityHashMap<>();
+    handler = new Handler(looper, this);
   }
 
   @Override
-  public Result doWork() {
-    // Get the data.
-    Data inputData = getInputData();
-    Log.d(TAG, "doWork() " + inputData);
-    int taskIdx = inputData.getInt(Constants.TASK_INDEX, -1);
-    int modelIdx = inputData.getInt(Constants.MODEL_INDEX, -1);
-    int numThreads = inputData.getInt(Constants.NUM_THREADS, -1);
-    String delegate = inputData.getString(Constants.DELEGATE);
-    String outputFolder = inputData.getString(Constants.OUTPUT_DIR);
-    boolean useDummyDataset = inputData.getBoolean(Constants.USE_DUMMY_DATASET, false);
-    // Validate data.
-    if (taskIdx < 0 || modelIdx < 0 || numThreads < 0) {
-      Data outputData =
-          new Data.Builder().putString(Constants.ERROR_MESSAGE, "Received malformed data").build();
-      return Result.failure(outputData);
+  public boolean handleMessage(Message msg) {
+    waitingMessages.remove(msg);
+    // Gets the data.
+    WorkerData data = (WorkerData) msg.obj;
+    Messenger messenger = msg.replyTo;
+    Log.d(TAG, "handleMessage() " + data);
+    if (data.taskIdx < 0 || data.modelIdx < 0 || data.numThreads < 0) {
+      replyWithUpdateMessage(messenger, "Received malformed data.");
+      return false;
     }
-    // Run each model.
-    String infTimeList;
-    String accuracyList;
-    TaskConfig taskConfig = mlperfTasks.getTask(taskIdx);
-    ModelConfig modelConfig = taskConfig.getModel(modelIdx);
+    // Runs the model.
+    TaskConfig taskConfig = mlperfTasks.getTask(data.taskIdx);
+    ModelConfig modelConfig = taskConfig.getModel(data.modelIdx);
     DatasetConfig dataset = taskConfig.getDataset();
+    boolean useDummyDataSet = !new File(dataset.getPath()).isDirectory();
+    String modelName = modelConfig.getName();
+    String runtime = computeRuntimeString(data.numThreads, data.delegate);
+    replyWithUpdateMessage(messenger, "Running inference for \"" + modelName + "\"...");
+    replyWithUpdateMessage(messenger, " - runtime: " + runtime);
     try {
       MLPerfDriverWrapper.Builder builder = new MLPerfDriverWrapper.Builder();
       builder.useTfliteBackend(
           modelConfig.getPath(),
-          numThreads,
-          delegate,
+          data.numThreads,
+          data.delegate,
           modelConfig.getNumInputs(),
           modelConfig.getNumOutputs());
-      if (useDummyDataset) {
+      if (useDummyDataSet) {
         builder.useDummy();
       } else {
         switch (dataset.getType()) {
@@ -100,23 +109,104 @@ public final class RunMLPerfWorker extends Worker {
           "SubmissionRun",
           taskConfig.getMinQueryCount(),
           taskConfig.getMinDurationMs(),
-          outputFolder);
-      infTimeList = driverWrapper.getLatency();
-      accuracyList = driverWrapper.getAccuracy();
+          data.outputFolder);
+      replyWithUpdateMessage(messenger, "Finished running \"" + modelName + "\".");
+      replyWithCompleteMessage(
+          messenger, modelName, runtime, driverWrapper.getLatency(), driverWrapper.getAccuracy());
     } catch (Exception e) {
-      Log.e(TAG, "Failed to run the model: " + e.getMessage());
-      Data outputData =
-          new Data.Builder().putString(Constants.ERROR_MESSAGE, e.getMessage()).build();
-      return Result.failure(outputData);
+      replyWithUpdateMessage(
+          messenger, "Running inference for \"" + modelName + "\" failed with " + e.getMessage());
+      replyWithCompleteMessage(messenger, modelName, runtime, "Err", "Err");
+      return false;
+    }
+    return true;
+  }
+
+  // Same as Handler.sendMessage but keeping track of the message pool.
+  public boolean sendMessage(Message msg) {
+    WorkerData data = (WorkerData) msg.obj;
+    String modelName = mlperfTasks.getTask(data.taskIdx).getModel(data.modelIdx).getName();
+    waitingMessages.put(msg, modelName);
+    return handler.sendMessage(msg);
+  }
+
+  // Gets a new message for the handler.
+  public Message obtainMessage(int what, Object obj) {
+    return handler.obtainMessage(what, obj);
+  }
+
+  // Clears the message pool.
+  public void removeMessages() {
+    for (Map.Entry<Message, String> entry : waitingMessages.entrySet()) {
+      Message reply = Message.obtain();
+      reply.what = REPLY_CANCEL;
+      reply.obj = "Canceled worker for \"" + entry.getValue() + "\".";
+      try {
+        entry.getKey().replyTo.send(reply);
+      } catch (RemoteException e) {
+        Log.e(TAG, "Failed to send message " + e.getMessage());
+      }
+    }
+    waitingMessages.clear();
+  }
+
+  private static void replyWithUpdateMessage(Messenger messenger, String update) {
+    Message reply = Message.obtain();
+    reply.what = REPLY_UPDATE;
+    reply.obj = update;
+    try {
+      messenger.send(reply);
+    } catch (RemoteException e) {
+      Log.e(TAG, "Failed to send message " + e.getMessage());
+    }
+  }
+
+  private static void replyWithCompleteMessage(
+      Messenger messenger, String model, String runtime, String latency, String accuracy) {
+    Message reply = Message.obtain();
+    reply.what = REPLY_COMPLETE;
+    ResultHolder result = new ResultHolder(model);
+    result.setRuntime(runtime);
+    result.setInferenceLatency(latency);
+    result.setAccuracy(accuracy);
+    reply.obj = result;
+    try {
+      messenger.send(reply);
+    } catch (RemoteException e) {
+      Log.e(TAG, "Failed to send message " + e.getMessage());
+    }
+  }
+
+  private static String computeRuntimeString(int numThreads, String delegate) {
+    StringBuilder runtimeStr = new StringBuilder();
+    if ("none".equalsIgnoreCase(delegate)) {
+      runtimeStr.append("CPU, ");
+      runtimeStr.append(numThreads);
+      runtimeStr.append(" thread");
+      if (numThreads > 1) {
+        runtimeStr.append("s");
+      }
+    } else {
+      runtimeStr.append(delegate);
+    }
+    return runtimeStr.toString();
+  }
+
+  /** Defines data for this worker. */
+  public static class WorkerData {
+    public WorkerData(
+        int taskId, int modelIdx, int numThreads, String delegate, String outputFolder) {
+      this.taskIdx = taskId;
+      this.modelIdx = modelIdx;
+      this.numThreads = numThreads;
+      this.delegate = delegate;
+      this.outputFolder = outputFolder;
     }
 
-    // Create the output of the work
-    Data outputData =
-        new Data.Builder()
-            .putString(Constants.LATENCY_RESULT, infTimeList)
-            .putString(Constants.ACCURACY_RESULT, accuracyList)
-            .build();
-    // Return the output
-    return Result.success(outputData);
+    protected int taskIdx;
+    protected int modelIdx;
+    protected int numThreads;
+    protected String delegate;
+    protected String outputFolder;
   }
 }

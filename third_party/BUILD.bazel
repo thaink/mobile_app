@@ -41,10 +41,9 @@ android_library(
 )
 
 android_library(
-    name = "androidx_work",
+    name = "androidx_core",
     exports = [
         "@maven//:androidx_core_core",
-        "@maven//:androidx_work_work_runtime",
     ],
 )
 

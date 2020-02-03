@@ -82,7 +82,6 @@ maven_install(
         "androidx.core:core:aar:1.1.0",
         "androidx.preference:preference:aar:1.1.0",
         "androidx.fragment:fragment:aar:1.2.0-rc04",
-        "androidx.work:work-runtime:aar:2.2.0",
         "com.google.android.material:material:aar:1.2.0-alpha03",
         "androidx.recyclerview:recyclerview:aar:1.1.0",
         "androidx.lifecycle:lifecycle-livedata:aar:2.1.0",

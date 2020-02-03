@@ -38,23 +38,24 @@ android_library(
     name = "evaluation_app_lib",
     srcs = [
         "MLPerfEvaluation.java",
+        "MLPerfTasks.java",
         "ResultHolder.java",
         "ResultsAdapter.java",
+        "RunMLPerfWorker.java",
         "SettingsActivity.java",
     ],
     manifest = "AndroidManifest.xml",
-    resource_files = glob(["res/**"]),
+    resource_files = [":tasks.pb"] + glob(["res/**"]),
     deps = [
+        ":jni_wrapper",
         ":mlperf_task_java_proto_lite",
-        ":mlperf_worker",
-        ":utils",
         "//third_party:androidx_annotation",
         "//third_party:androidx_appcompat",
         "//third_party:androidx_constraint_layout",
+        "//third_party:androidx_core",
         "//third_party:androidx_material",
         "//third_party:androidx_preference",
         "//third_party:androidx_recyclerview",
-        "//third_party:androidx_work",
     ],
 )
 
@@ -84,32 +85,6 @@ filegroup(
             "**/OWNERS",
         ],
     ),
-)
-
-android_library(
-    name = "utils",
-    srcs = [
-        "Constants.java",
-        "MLPerfTasks.java",
-    ],
-    manifest = "AndroidManifest.xml",
-    resource_files = [":tasks.pb"],
-    deps = [":mlperf_task_java_proto_lite"],
-)
-
-android_library(
-    name = "mlperf_worker",
-    srcs = [
-        "RunMLPerfWorker.java",
-    ],
-    manifest = "AndroidManifest.xml",
-    deps = [
-        ":jni_wrapper",
-        ":mlperf_task_java_proto_lite",
-        ":utils",
-        "//third_party:androidx_annotation",
-        "//third_party:androidx_work",
-    ],
 )
 
 android_library(
