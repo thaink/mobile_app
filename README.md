@@ -50,8 +50,9 @@ frameworks contributed by the broader MLPerf community.
 
 ## Getting Started
 
-In order to build the app, first make sure to download the SDK and NDK using the
-Android studio. Then set the following environment variables:
+There are two ways to build the app. If you want to make your own environment,
+first make sure to download the SDK and NDK using the Android studio. Then set
+the following environment variables:
 
 ```bash
 export ANDROID_HOME=Path/to/SDK # Ex: $HOME/Android/Sdk
@@ -61,7 +62,22 @@ export ANDROID_NDK_HOME=Path/to/NDK # Ex: $ANDROID_HOME/ndk/(your version)
 The app can be built with the following command:
 
 ```bash
-bazel build -c opt --cxxopt='--std=c++14' --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a //java/org/mlperf/inference:mlperf_app
+bazel build -c opt --cxxopt='--std=c++14' \
+    --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a \
+    //java/org/mlperf/inference:mlperf_app
+```
+
+On the other hand, you can use our prebuilt docker image to build the app:
+
+```
+docker run \
+    -v `pwd`:/mobile_app \
+    -v <path to your cache dir>:/cache \
+    -w /mobile_app \
+    thaink/android-bazel:latest --output_user_root=/cache/bazel build \
+    -c opt --cxxopt='--std=c++14' \
+    --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a \
+    //java/org/mlperf/inference:mlperf_app
 ```
 
 Please see [these instructions](prebuilt/README.md) for installing and using the
@@ -91,8 +107,3 @@ teams and organizations who desire this.
 Please search
 https://groups.google.com/forum/#!forum/mlperf-inference-submitters for
 additional help and related questions.
-
-#### What is the license for embedded tflite models?
-
-The license of those models belongs to the Tensorflow team. Please contact them
-for more details.
