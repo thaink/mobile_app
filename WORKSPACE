@@ -85,6 +85,13 @@ maven_install(
         "com.google.android.material:material:aar:1.2.0-alpha03",
         "androidx.recyclerview:recyclerview:aar:1.1.0",
         "androidx.lifecycle:lifecycle-livedata:aar:2.1.0",
+        "junit:junit:4.13",
+        "com.google.inject:guice:4.2.2",
+        "org.hamcrest:java-hamcrest:2.0.0.0",
+        "androidx.test.espresso:espresso-core:3.2.0",
+        "androidx.test:runner:1.2.0",
+        "androidx.test:rules:1.2.0",
+        "androidx.test.ext:junit:1.1.2-alpha03",
     ],
     repositories = [
         "https://dl.google.com/dl/android/maven2",
@@ -152,3 +159,16 @@ py_repositories()
 load("@org_tensorflow//tensorflow:version_check.bzl", "check_bazel_version_at_least")
 
 check_bazel_version_at_least("0.24.1")
+
+# Dependencies for android instrument test.
+ATS_TAG = "1edfdab3134a7f01b37afabd3eebfd2c5bb05151"
+ATS_SHA256 = "dcd1ff76aef1a26329d77863972780c8fe1fc8ff625747342239f0489c2837ec"
+http_archive(
+    name = "android_test_support",
+    sha256 = ATS_SHA256,
+    strip_prefix = "android-test-%s" % ATS_TAG,
+    urls = ["https://github.com/android/android-test/archive/%s.tar.gz" % ATS_TAG],
+)
+load("@android_test_support//:repo.bzl", "android_test_repositories")
+
+android_test_repositories()

@@ -2,35 +2,60 @@ name: Checking pull request
 on:
   pull_request:
     branches:
-      - master
+    - master
 
 jobs:
   build:
-    name: Checking pull request
+    name: Build and unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
 
-      - name: Store Cloud storage key
-        env:
-          CLOUD_STORAGE_KEY: ${{ secrets.CLOUD_STORAGE_KEY }}
-        run: echo $CLOUD_STORAGE_KEY > ~/work/_temp/_github_workflow/storage_key.json
+    - name: Store Cloud storage key
+      env:
+        CLOUD_STORAGE_KEY: ${{ secrets.CLOUD_STORAGE_KEY }}
+      run: echo $CLOUD_STORAGE_KEY > ~/work/_temp/_github_workflow/storage_key.json
 
-      - name: Build all
-        uses: docker://thaink/android-bazel:latest
-        with:
-          args: >
-            build --remote_http_cache=https://storage.googleapis.com/mlperf_mobile_app_bazel_build_cache
-            --google_credentials=/github/workflow/storage_key.json
-            -c opt --cxxopt="--std=c++17" //...
+    - name: Build all
+      uses: docker://thaink/android-bazel:latest
+      with:
+        args: >
+          build --remote_http_cache=https://storage.googleapis.com/mlperf_mobile_app_bazel_build_cache
+          --google_credentials=/github/workflow/storage_key.json
+          -c opt --cxxopt="--std=c++17" //...
 
-      - name: Run unit tests
-        uses: docker://thaink/android-bazel:latest
-        with:
-          args: >
-            test --test_output=streamed
-            --remote_http_cache=https://storage.googleapis.com/mlperf_mobile_app_bazel_unit_tests_cache
-            --google_credentials=/github/workflow/storage_key.json
-            -c opt --cxxopt="--std=c++17" //cpp/...
+    - name: Run unit tests
+      uses: docker://thaink/android-bazel:latest
+      with:
+        args: >
+          test --test_output=streamed
+          --remote_http_cache=https://storage.googleapis.com/mlperf_mobile_app_bazel_unit_tests_cache
+          --google_credentials=/github/workflow/storage_key.json
+          -c opt --cxxopt="--std=c++17" //cpp/...
+  test:
+    name: Instrument tests
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: Store Cloud storage key
+      env:
+        CLOUD_STORAGE_KEY: ${{ secrets.CLOUD_STORAGE_KEY }}
+      run: echo $CLOUD_STORAGE_KEY > /Users/runner/storage_key.json
+
+    - name: Install bazel
+      run: wget https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel-2.0.0-installer-darwin-x86_64.sh &&
+        bash bazel-2.0.0-installer-darwin-x86_64.sh --user && bazel --version
+
+    - name: Install dependencies
+      run: python3 -m pip install six && python -m pip install absl-py future
+
+    - name: Run tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 26
+        script: bash .github/workflows/run_test.sh

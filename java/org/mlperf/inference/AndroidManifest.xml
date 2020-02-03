@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.mlperf.inference">
 
-  <uses-sdk android:minSdkVersion="23" />
+  <uses-sdk
+      android:minSdkVersion="23"
+      android:targetSdkVersion="26" />
 
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
   <uses-permission android:name="android.permission.READ_PHONE_STATE" />
