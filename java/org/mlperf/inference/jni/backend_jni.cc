@@ -25,7 +25,7 @@ extern "C" {
 
 JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_tflite(
     JNIEnv* env, jclass clazz, jstring jmodel_file_path, jint num_threads,
-    jstring jdelegate, jint num_inputs, jint num_outputs) {
+    jstring jdelegate) {
   // Convert parameters to C++.
   std::string model_file_path =
       env->GetStringUTFChars(jmodel_file_path, nullptr);
@@ -33,8 +33,8 @@ JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_tflite(
 
   // Create a new TfliteBackend object.
   std::unique_ptr<mlperf::mobile::TfliteBackend> backend_ptr(
-      new mlperf::mobile::TfliteBackend(model_file_path, num_threads, delegate,
-                                        num_inputs, num_outputs));
+      new mlperf::mobile::TfliteBackend(model_file_path, num_threads,
+                                        delegate));
   return reinterpret_cast<jlong>(backend_ptr.release());
 }
 

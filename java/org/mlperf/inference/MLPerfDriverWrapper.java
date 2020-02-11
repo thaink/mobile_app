@@ -99,8 +99,7 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
   private static native void nativeDeleteBackend(long handle);
 
   // Return a pointer of a new TfliteBackend object.
-  private static native long tflite(
-      String modelFilePath, int numThreads, String delegate, int numInputs, int numOutputs);
+  private static native long tflite(String modelFilePath, int numThreads, String delegate);
 
   // driverHandle holds a pointer of TfliteMlperfDriver.
   private final long driverHandle;
@@ -116,10 +115,9 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
 
     public Builder() {}
 
-    public Builder useTfliteBackend(
-        String modelFilePath, int numThreads, String delegate, int numInputs, int numOutputs) {
+    public Builder useTfliteBackend(String modelFilePath, int numThreads, String delegate) {
       nativeDeleteBackend(backend);
-      backend = tflite(modelFilePath, numThreads, delegate, numInputs, numOutputs);
+      backend = tflite(modelFilePath, numThreads, delegate);
       return this;
     }
 

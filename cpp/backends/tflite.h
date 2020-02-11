@@ -26,8 +26,7 @@ namespace mobile {
 class TfliteBackend : public Backend {
  public:
   TfliteBackend(const std::string& model_file_path, int num_threads,
-                const std::string& delegate, int expected_input_size,
-                int expected_output_size);
+                const std::string& delegate);
 
   // A human-readable string for logging purposes.
   const std::string& Name() const override { return name_; }

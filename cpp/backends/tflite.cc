@@ -59,9 +59,7 @@ inline DataType::Type TfType2DataType(TfLiteType type) {
 }  // namespace
 
 TfliteBackend::TfliteBackend(const std::string& model_file_path,
-                             int num_threads, const std::string& delegate,
-                             int expected_input_size,
-                             int expected_output_size) {
+                             int num_threads, const std::string& delegate) {
   tflite::evaluation::EvaluationStageConfig inference_config;
   inference_config.set_name("inference_stage");
   auto* inference_params = inference_config.mutable_specification()
@@ -76,15 +74,9 @@ TfliteBackend::TfliteBackend(const std::string& model_file_path,
   if (inference_stage_->Init() != kTfLiteOk) {
     LOG(FATAL) << "Init inference stage failed";
   }
-  // Validate model inputs and outputs.
+  // Collect input and output formats.
   const tflite::evaluation::TfLiteModelInfo* model_info =
       inference_stage_->GetModelInfo();
-  if (model_info->inputs.size() != expected_input_size ||
-      model_info->outputs.size() != expected_output_size) {
-    LOG(ERROR) << "Model must have " << expected_input_size << " input & "
-               << expected_output_size << " output";
-  }
-  // Collect input and output formats.
   for (const TfLiteTensor* input : model_info->inputs) {
     input_format_.emplace_back(TfType2DataType(input->type),
                                tflite::NumElements(input));

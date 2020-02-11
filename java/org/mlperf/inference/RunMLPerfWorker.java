@@ -75,12 +75,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
     replyWithUpdateMessage(messenger, " - runtime: " + runtime);
     try {
       MLPerfDriverWrapper.Builder builder = new MLPerfDriverWrapper.Builder();
-      builder.useTfliteBackend(
-          modelConfig.getPath(),
-          data.numThreads,
-          data.delegate,
-          modelConfig.getNumInputs(),
-          modelConfig.getNumOutputs());
+      builder.useTfliteBackend(modelConfig.getPath(), data.numThreads, data.delegate);
       if (useDummyDataSet) {
         builder.useDummy();
       } else {

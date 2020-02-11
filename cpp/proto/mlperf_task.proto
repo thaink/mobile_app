@@ -69,21 +69,17 @@ message DatasetConfig {
 
 // Config of a model.
 //
-// Next ID: 8
+// Next ID: 6
 message ModelConfig {
   // Name of the model.
   required string name = 1;
-  // Number of inputs.
-  required int32 num_inputs = 2;
-  // Number of outputs.
-  required int32 num_outputs = 3;
   // Path to the model. If not available, will be downloaded from src.
-  required string path = 4;
+  required string path = 2;
   // Path to download the model if path is not available.
   // Could be: http, https, or @assets/file (for files embedded in assets).
-  optional string src = 5;
+  optional string src = 3;
   // Offset value of the model if applicable.
-  optional int32 offset = 6 [default = 0];
+  optional int32 offset = 4 [default = 0];
   // Tags related to the models.
-  optional string tags = 7;
+  optional string tags = 5;
 }
