@@ -30,6 +30,8 @@ import android.os.Messenger;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -59,6 +61,7 @@ import org.mlperf.proto.TaskConfig;
 
 /** {@link MLPerfEvaluation} evaluates models on MLPerf benchmark. */
 public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callback {
+
   private static final String TAG = "MLPerfEvaluation";
   private static final String ASSETS_PREFIX = "@assets/";
 
@@ -135,7 +138,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
 
     // Checks if models are available.
     checkModelIsAvailable();
-    progressCount = new ProgressCount(progressBar);
+    progressCount = new ProgressCount(progressBar, getWindow());
   }
 
   @Override
@@ -265,6 +268,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
 
   // The Animator that uses animateBackground.
   private class ResultItemAnimator extends DefaultItemAnimator {
+
     @Override
     public boolean animateAdd(RecyclerView.ViewHolder holder) {
       return animateBackground(holder);
@@ -300,11 +304,12 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   }
 
   private static class ProgressCount {
-    public ProgressCount(ProgressBar progBar) {
+
+    public ProgressCount(ProgressBar progBar, Window window) {
       totalWorkCount = 0;
       finishedWorkCount = 0;
       progressBar = progBar;
-      updateUI();
+      this.window = window;
     }
 
     public synchronized void increaseTotal() {
@@ -323,6 +328,11 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     }
 
     public void updateUI() {
+      if (totalWorkCount > finishedWorkCount) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+      } else {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+      }
       if (totalWorkCount == 0) {
         progressBar.setProgress(0);
         return;
@@ -333,6 +343,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     private int totalWorkCount;
     private int finishedWorkCount;
     private final ProgressBar progressBar;
+    private final Window window;
   }
 
   private void addNewResult(ResultHolder result) {
