@@ -82,8 +82,10 @@ To prepare the dataset for object detection you need to do the following:
 
 *   Download the 2017 Val images from above website.
 *   Create a staging directory for the dataset, call it `${WORKING_DIR}/coco`.
+*   Download the 2017 Val annotations from above website and move it into `${WORKING_DIR}/coco/annotations`
 *   Resize the images using the [upscale_coco.py script](https://github.com/mlperf/inference/blob/master/v0.5/tools/upscale_coco):<br>
     `python upscale_coco.py --inputs /path-to-coco/ --outputs ${WORKING_DIR}/coco/img/ --size 300 300`
+     - If your downloaded images are not in `${WORKING_DIR}/coco/val2017/` you will have to use `--images` flag
 
 The resulting folder contents should appear like:
 
