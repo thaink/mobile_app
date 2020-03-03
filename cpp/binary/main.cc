@@ -127,10 +127,17 @@ int Main(int argc, char* argv[]) {
                             "Number of interpreter threads for inference."),
            Flag::CreateFlag("delegate", &delegate,
                             "Delegate for inference, if available. "
-                            "Can be one value of {'nnapi', 'gpu', 'none'}.")});
+                            "Can be one value of {'nnapi', 'nnapi-{accelerator "
+                            "name}', 'gpu', 'gpu (f16)', 'none'}.")});
       if (Flags::Parse(&argc, const_cast<const char**>(argv), flag_list)) {
-        backend.reset(
-            new TfliteBackend(model_file_path, num_threads, delegate));
+        TfliteBackend* tflite_backend =
+            new TfliteBackend(model_file_path, num_threads);
+        if (tflite_backend->ApplyDelegate(delegate) != kTfLiteOk) {
+          LOG(INFO) << "Cannot apply the delegate.";
+          delete tflite_backend;
+          return 1;
+        }
+        backend.reset(tflite_backend);
       }
     } break;
     default:

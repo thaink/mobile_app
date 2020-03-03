@@ -5,19 +5,16 @@ task {
     type: IMAGENET
     path: "/sdcard/mlperf_datasets/imagenet/img/"
     groundtruth_src: "@assets/imagenet_val.txt"
-    groundtruth_path: "/sdcard/mlperf_datasets/imagenet/imagenet_val.txt"
   }
   model {
     name: "MobileNets-v1 224 Uint8"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224_quant.tflite"
-    path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224_quant.tflite"
     offset: 1
     tags: "uint8"
   }
   model {
     name: "MobileNets-v1 224 Float"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224.tflite"
-    path: "/sdcard/mlperf_datasets/imagenet/mobilenet_v1_1.0_224.tflite"
     offset: 1
     tags: "float"
   }
@@ -32,19 +29,16 @@ task {
     type: COCO
     path: "/sdcard/mlperf_datasets/coco/img/"
     groundtruth_src: "@assets/coco_val.pbtxt"
-    groundtruth_path: "/sdcard/mlperf_datasets/coco/coco_val.pbtxt"
   }
   model {
     name: "SSD-MobileNets-v1 Uint8"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/coco_ssd_mobilenet_v1_1.0_quant.tflite"
-    path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0_quant.tflite"
     offset: 1
     tags: "uint8"
   }
   model {
     name: "SSD-MobileNets-v1 Float"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/coco_ssd_mobilenet_v1_1.0.tflite"
-    path: "/sdcard/mlperf_datasets/coco/coco_ssd_mobilenet_v1_1.0.tflite"
     offset: 1
     tags: "float"
   }

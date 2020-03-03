@@ -24,6 +24,7 @@ import org.mlperf.proto.MLPerfConfig;
 final class MLPerfTasks {
   private static final String TAG = "MLPerfTasks";
   private static MLPerfConfig mlperfTasks;
+  private static String localDir;
 
   // Make this class not instantiable.
   private MLPerfTasks() {}
@@ -35,10 +36,16 @@ final class MLPerfTasks {
         InputStream inputStream = context.getResources().openRawResource(R.raw.tasks_pb);
         mlperfTasks = MLPerfConfig.parseFrom(inputStream);
         inputStream.close();
+        localDir = context.getFilesDir().getPath();
       } catch (IOException e) {
         Log.e(TAG, "Unable to read config proto file");
       }
     }
     return mlperfTasks;
+  }
+
+  public static String getLocalPath(String path) {
+    String ext = path.substring(path.lastIndexOf('.'));
+    return localDir + "/cache/tmp" + path.hashCode() + ext;
   }
 }

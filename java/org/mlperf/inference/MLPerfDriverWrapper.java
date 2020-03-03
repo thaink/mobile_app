@@ -15,6 +15,8 @@ limitations under the License.
 
 package org.mlperf.inference;
 
+import java.util.ArrayList;
+
 /** A class that wraps functionality around tflite::mlperf::MlperfDriver. */
 public final class MLPerfDriverWrapper implements AutoCloseable {
   /**
@@ -54,6 +56,10 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
   public void close() {
     nativeDelete(driverHandle);
   }
+
+  // List devices available for NNAPI. This only works on API >= 29, otherwise it returns an
+  // empty list.
+  public static native ArrayList<String> listDevicesForNNAPI();
 
   // Native functions.
   private native long nativeInit(long datasetHandle, long backendHandle);
