@@ -16,6 +16,7 @@ package org.mlperf.inference;
 
 import android.content.Context;
 import android.util.Log;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import org.mlperf.proto.MLPerfConfig;
@@ -45,7 +46,7 @@ final class MLPerfTasks {
   }
 
   public static String getLocalPath(String path) {
-    String ext = path.substring(path.lastIndexOf('.'));
-    return localDir + "/cache/tmp" + path.hashCode() + ext;
+    String filename = new File(path).getName();
+    return localDir + "/cache/" + filename;
   }
 }

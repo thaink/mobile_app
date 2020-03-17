@@ -7,14 +7,14 @@ task {
     groundtruth_src: "@assets/imagenet_val.txt"
   }
   model {
-    name: "MobileNets-v1 224 Int8"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_224_full-integer.tflite"
+    name: "MobileNetEdgeTPU 224 1.0 Int8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_int8.tflite"
     offset: 1
     tags: "int8"
   }
   model {
-    name: "MobileNets-v1 224 F32"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/mobilenet_v1_1.0_224.tflite"
+    name: "MobileNetEdgeTPU 224 1.0 F32"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilenet_edgetpu_224_1.0_float.tflite"
     offset: 1
     tags: "float32"
   }
@@ -31,14 +31,14 @@ task {
     groundtruth_src: "@assets/coco_val.pbtxt"
   }
   model {
-    name: "SSD-MobileNets-v1 Int8"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/ssd_mobilenet_v1_300_full-integer.tflite"
+    name: "SSD-MobileNets-v2 Int8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/ssd_mobilenet_v2_300_int8.tflite"
     offset: 1
     tags: "int8"
   }
   model {
-    name: "SSD-MobileNets-v1 F32"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.5/tflite/ssd_mobilenet_v1_300_f32.tflite"
+    name: "SSD-MobileNets-v2 F32"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/ssd_mobilenet_v2_300_float.tflite"
     offset: 1
     tags: "float32"
   }

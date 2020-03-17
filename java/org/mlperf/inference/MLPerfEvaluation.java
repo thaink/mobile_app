@@ -22,6 +22,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -466,6 +468,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     private final WeakReference<Context> contextRef;
     private final MLPerfConfig mlperfTasks;
     private boolean success = true;
+    private String error;
 
     public ModelExtractTask(Context context, MLPerfConfig mlperfTasks) {
       contextRef = new WeakReference<>(context);
@@ -505,6 +508,14 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
           AssetManager assetManager = ((MLPerfEvaluation) contextRef.get()).getAssets();
           in = assetManager.open(src.substring(ASSETS_PREFIX.length()));
         } else if (src.startsWith("http://") || src.startsWith("https://")) {
+          ConnectivityManager cm =
+              (ConnectivityManager) contextRef.get().getSystemService(Context.CONNECTIVITY_SERVICE);
+          NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+          boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+          if (!isConnected) {
+            error = "Error: No network connected.";
+            return false;
+          }
           in = new URL(src).openStream();
         } else {
           in = new FileInputStream(src);
@@ -513,7 +524,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         copyFile(in, out);
         tmpFile.renameTo(destFile);
       } catch (IOException e) {
-        Log.e(TAG, "Failed to prepare file: " + dest, e);
+        Log.e(TAG, "Failed to prepare file " + dest + ": " + e.getMessage());
+        error = "Error: " + e.getMessage();
         return false;
       }
 
@@ -540,6 +552,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         Log.d(TAG, "All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).logProgress("All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).setModelIsAvailable();
+      } else {
+        ((MLPerfEvaluation) contextRef.get()).logProgress(error);
       }
     }
   }
