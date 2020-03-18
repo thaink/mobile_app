@@ -57,6 +57,7 @@ message DatasetConfig {
     IMAGENET = 1;
     COCO = 2;
     MOBILEBERT = 3;
+    ADE20K = 4;
   }
   required DatasetType type = 2;
   // Path to the dataset.

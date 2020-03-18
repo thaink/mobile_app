@@ -34,6 +34,7 @@ struct DataType {
     Int8 = 2,
     Float16 = 3,
     Int32 = 4,
+    Int64 = 5,
   };
 
   DataType(Type t, int s) {
@@ -52,6 +53,8 @@ struct DataType {
       case Int32:
       case Float32:
         return 4;
+      case Int64:
+        return 8;
     }
   }
 
