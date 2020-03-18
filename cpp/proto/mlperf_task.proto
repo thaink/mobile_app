@@ -14,7 +14,7 @@ limitations under the License.
 ==============================================================================*/
 syntax = "proto2";
 
-package org.mlperf.proto;
+package mlperf.mobile;
 
 option cc_enable_arenas = true;
 option java_multiple_files = true;
@@ -53,8 +53,10 @@ message DatasetConfig {
   required string name = 1;
   // Type of the dataset.
   enum DatasetType {
-    IMAGENET = 0;
-    COCO = 1;
+    NONE = 0;
+    IMAGENET = 1;
+    COCO = 2;
+    MOBILEBERT = 3;
   }
   required DatasetType type = 2;
   // Path to the dataset.

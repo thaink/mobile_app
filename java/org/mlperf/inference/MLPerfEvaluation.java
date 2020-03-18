@@ -446,7 +446,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
           }
         }
         DatasetConfig dataset = task.getDataset();
-        if (!new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead()) {
+        if (dataset.hasGroundtruthSrc()
+            && !new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead()) {
           new ModelExtractTask(MLPerfEvaluation.this, mlperfTasks).execute();
           return false;
         }

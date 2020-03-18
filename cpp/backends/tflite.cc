@@ -40,6 +40,8 @@ inline DataType::Type TfType2DataType(TfLiteType type) {
       return DataType::Int8;
     case kTfLiteFloat16:
       return DataType::Float16;
+    case kTfLiteInt32:
+      return DataType::Int32;
     default:
       LOG(FATAL) << "TfLiteType " << type << " not supported";
       return DataType::Float32;

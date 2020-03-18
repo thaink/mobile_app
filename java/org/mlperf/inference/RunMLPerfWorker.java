@@ -80,7 +80,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
       builder.useTfliteBackend(
           MLPerfTasks.getLocalPath(modelConfig.getSrc()), data.numThreads, data.delegate);
       if (useDummyDataSet) {
-        builder.useDummy();
+        builder.useDummy(dataset.getType());
       } else {
         switch (dataset.getType()) {
           case IMAGENET:

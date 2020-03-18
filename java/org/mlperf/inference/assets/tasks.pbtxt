@@ -45,3 +45,19 @@ task {
   min_query_count: 100
   min_duration_ms: 1000
 }
+
+task {
+  name: " Language Understanding"
+  dataset {
+    name: "Dummy"
+    type: MOBILEBERT
+    path: "/sdcard/mlperf_datasets/mobilebert/"
+  }
+  model {
+    name: "MobileBert F32"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_float_20191023.tflite"
+    tags: "float32"
+  }
+  min_query_count: 100
+  min_duration_ms: 1000
+}
