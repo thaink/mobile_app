@@ -35,6 +35,7 @@ cc_library(
     ],
     deps = [
         "//cpp:mlperf_driver",
+        "//cpp/backends:dummy_backend",
         "//cpp/backends:tflite",
         "//cpp/datasets:coco",
         "//cpp/datasets:dummy_dataset",

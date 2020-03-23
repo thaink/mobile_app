@@ -109,6 +109,15 @@ new_git_repository(
 )
 
 http_archive(
+    name = "backend_dummy_api",
+    sha256 = "e478562b240623e18ada3d5bdfd00c6d2f15faf929df0d63e4a85f1b00b0f235",
+    strip_prefix = "mobile_app-bf8a793d6f726bd72082455c1625e30cd6ab992c",
+    urls = [
+        "https://github.com/mlperf/mobile_app/archive/bf8a793d6f726bd72082455c1625e30cd6ab992c.zip",
+    ],
+)
+
+http_archive(
     name = "com_google_protobuf_javalite",
     sha256 = "757038e6363ec3ad9df4f9548105289767e03f8c1efb000181cafa16ccdf2e69",
     strip_prefix = "protobuf-javalite",

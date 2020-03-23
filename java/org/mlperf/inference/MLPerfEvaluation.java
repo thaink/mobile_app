@@ -80,6 +80,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   private final ArrayList<ResultHolder> results = new ArrayList<>();
   private final HashMap<String, Integer> resultMap = new HashMap<>();
 
+  private String backend;
   private Set<String> delegates;
   private int numThreadsPreference;
   private int highLightColor;
@@ -152,6 +153,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     checkModelIsAvailable();
 
     // Updates the shared preference.
+    backend = sharedPref.getString(getString(R.string.backend_preference_key), null);
     delegates = sharedPref.getStringSet(getString(R.string.pref_delegate_key), null);
     numThreadsPreference =
         Integer.parseInt(
@@ -236,8 +238,14 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         TaskConfig task = mlperfTasks.getTask(taskIdx);
         for (int modelIdx = 0; modelIdx < task.getModelCount(); ++modelIdx) {
           if (selectedModels.contains(task.getModel(modelIdx).getName())) {
-            for (String delegate : delegates) {
-              scheduleInference(taskIdx, modelIdx, delegate);
+            if (backend.equals("tflite")) {
+              for (String delegate : delegates) {
+                scheduleInference(taskIdx, modelIdx, delegate);
+              }
+            } else if (backend.equals("dummy_backend")) {
+              scheduleInference(taskIdx, modelIdx, "");
+            } else {
+              logProgress("Backend " + backend + "is not supported.");
             }
           }
         }
@@ -315,7 +323,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     Log.i(TAG, "The mlperf log dir for \"" + modelName + "\" is " + outputLogDir + "/");
     RunMLPerfWorker.WorkerData data =
         new RunMLPerfWorker.WorkerData(
-            taskIdx, modelIdx, numThreadsPreference, delegate, outputLogDir);
+            taskIdx, modelIdx, backend, numThreadsPreference, delegate, outputLogDir);
     Message msg = workerHandler.obtainMessage(RunMLPerfWorker.MSG_RUN, data);
     msg.replyTo = replyMessenger;
     workerHandler.sendMessage(msg);

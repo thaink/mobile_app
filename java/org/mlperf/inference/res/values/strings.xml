@@ -53,6 +53,18 @@
   <string name="custom_config_summary" description="Selecting custom config summary [CHAR_LIMIT=50]">
     Using the default configuration
   </string>
+  <string name="backend_preference" description="Inference backend [CHAR_LIMIT=50]">
+    Inference backend
+  </string>
+  <string name="backend_preference_key" description="Inference backend key [CHAR_LIMIT=50]">
+    inference_backend
+  </string>
+  <string name="tflite_preference_key" description="Tflite setting group key [CHAR_LIMIT=50]">
+    tflite
+  </string>
+  <string name="dummy_backend_preference_key" description="Dummy backend setting group key [CHAR_LIMIT=50]">
+    dummy_backend
+  </string>
 
   <!-- Values for delegate setting -->
   <string name="delegate_none" description="CPU [CHAR_LIMIT=50]">None</string>
