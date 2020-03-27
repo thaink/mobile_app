@@ -499,7 +499,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     private boolean extractFile(String src) {
       String dest = MLPerfTasks.getLocalPath(src);
       File destFile = new File(dest);
-      Log.d(TAG, "Preparing " + destFile.getName());
+      ((MLPerfEvaluation) contextRef.get()).logProgress("Extracting " + destFile.getName() + "...");
       destFile.getParentFile().mkdirs();
       // Extract to a temporary file first, so the app can detects if the extraction failed.
       File tmpFile = new File(dest + ".tmp");
@@ -550,7 +550,6 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     @Override
     protected void onPostExecute(Void result) {
       if (success) {
-        Log.d(TAG, "All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).logProgress("All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).setModelIsAvailable();
       } else {
