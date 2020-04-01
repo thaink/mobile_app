@@ -44,6 +44,15 @@
   <string name="models_preference_key" description="Selecting Models Pref Key [CHAR_LIMIT=50]">
     selected_models
   </string>
+  <string name="custom_config_key" description="Selecting custom config Key [CHAR_LIMIT=50]">
+    custom_config
+  </string>
+  <string name="config_summary_key" description="Selecting custom config summary key [CHAR_LIMIT=50]">
+    config_summary
+  </string>
+  <string name="custom_config_summary" description="Selecting custom config summary [CHAR_LIMIT=50]">
+    Using the default configuration
+  </string>
 
   <!-- Values for delegate setting -->
   <string name="delegate_none" description="CPU [CHAR_LIMIT=50]">None</string>

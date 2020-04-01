@@ -123,6 +123,14 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     ImageView settingButton = findViewById(R.id.action_settings);
     settingButton.setOnClickListener(this::settingButtonListener);
 
+    // Handles the result from RunMLPerfWorker.
+    replyMessenger = new Messenger(new Handler(this.getMainLooper(), this));
+    progressCount = new ProgressCount(progressBar, getWindow());
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
     // Reads tasks from proto file.
     mlperfTasks = MLPerfTasks.getConfig(getApplicationContext());
 
@@ -140,17 +148,9 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
       preferencesEditor.commit();
     }
 
-    // Handles the result from RunMLPerfWorker.
-    replyMessenger = new Messenger(new Handler(this.getMainLooper(), this));
-
     // Checks if models are available.
     checkModelIsAvailable();
-    progressCount = new ProgressCount(progressBar, getWindow());
-  }
 
-  @Override
-  public void onResume() {
-    super.onResume();
     // Updates the shared preference.
     delegates = sharedPref.getStringSet(getString(R.string.pref_delegate_key), null);
     numThreadsPreference =

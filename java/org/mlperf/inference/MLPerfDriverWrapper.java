@@ -62,6 +62,9 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
   // empty list.
   public static native ArrayList<String> listDevicesForNNAPI();
 
+  // Convert text proto file to binary proto.
+  public static native byte[] convertProto(String text);
+
   // Native functions.
   private native long nativeInit(long datasetHandle, long backendHandle);
 

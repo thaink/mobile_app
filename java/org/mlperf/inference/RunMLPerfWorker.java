@@ -26,7 +26,6 @@ import java.io.File;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import org.mlperf.proto.DatasetConfig;
-import org.mlperf.proto.MLPerfConfig;
 import org.mlperf.proto.ModelConfig;
 import org.mlperf.proto.TaskConfig;
 
@@ -44,14 +43,14 @@ public final class RunMLPerfWorker implements Handler.Callback {
   public static final int REPLY_ERROR = 4;
   public static final String TAG = "RunMLPerfWorker";
 
-  private final MLPerfConfig mlperfTasks;
   private final IdentityHashMap<Message, String> waitingMessages;
   private final Handler handler;
+  private final Context context;
 
   public RunMLPerfWorker(@NonNull Context context, @NonNull Looper looper) {
-    mlperfTasks = MLPerfTasks.getConfig(context);
     waitingMessages = new IdentityHashMap<>();
     handler = new Handler(looper, this);
+    this.context = context;
   }
 
   @Override
@@ -67,7 +66,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
     }
     // Runs the model.
     String mode = "SubmissionRun";
-    TaskConfig taskConfig = mlperfTasks.getTask(data.taskIdx);
+    TaskConfig taskConfig = MLPerfTasks.getConfig(context).getTask(data.taskIdx);
     ModelConfig modelConfig = taskConfig.getModel(data.modelIdx);
     DatasetConfig dataset = taskConfig.getDataset();
     boolean useDummyDataSet = !new File(dataset.getPath()).isDirectory();
@@ -123,7 +122,8 @@ public final class RunMLPerfWorker implements Handler.Callback {
   // Same as Handler.sendMessage but keeping track of the message pool.
   public boolean sendMessage(Message msg) {
     WorkerData data = (WorkerData) msg.obj;
-    String modelName = mlperfTasks.getTask(data.taskIdx).getModel(data.modelIdx).getName();
+    String modelName =
+        MLPerfTasks.getConfig(context).getTask(data.taskIdx).getModel(data.modelIdx).getName();
     waitingMessages.put(msg, modelName);
     return handler.sendMessage(msg);
   }

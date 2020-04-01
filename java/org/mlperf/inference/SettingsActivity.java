@@ -15,8 +15,11 @@ limitations under the License.
 package org.mlperf.inference;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -31,10 +34,14 @@ import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceDialogFragmentCompat;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -111,6 +118,24 @@ public class SettingsActivity extends AppCompatActivity {
       modelsPref.setIconSpaceReserved(false);
       modelsPref.setPersistent(true);
       screen.addPreference(modelsPref);
+
+      // Load custom configuration.
+      Context context = getPreferenceManager().getContext();
+      SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+      Preference customConfig = (Preference) findPreference(getString(R.string.custom_config_key));
+      customConfig.setOnPreferenceClickListener(
+          new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+              Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
+              startActivityForResult(intent, 0);
+              return true;
+            }
+          });
+      String configSummary = sharedPref.getString(getString(R.string.config_summary_key), null);
+      if (configSummary != null) {
+        customConfig.setSummary(configSummary);
+      }
     }
 
     @Override
@@ -119,6 +144,38 @@ public class SettingsActivity extends AppCompatActivity {
         ((ModelsPreference) preference).showDialog(this);
       } else {
         super.onDisplayPreferenceDialog(preference);
+      }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+      super.onActivityResult(requestCode, resultCode, data);
+      Context context = getPreferenceManager().getContext();
+      try {
+        InputStream is = context.getContentResolver().openInputStream(data.getData());
+        BufferedReader buffreader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+        String line;
+        StringBuilder stringBuilder = new StringBuilder();
+        while ((line = buffreader.readLine()) != null) {
+          stringBuilder.append(line);
+          stringBuilder.append('\n');
+        }
+        String text = stringBuilder.toString();
+        if (MLPerfTasks.loadCustomConfig(text)) {
+          SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+          SharedPreferences.Editor editor = preferences.edit();
+          // Store the file content instead of the file path because the app only has read access
+          // to this file via Uri inside onActivityResult. This means whenever the file is edited,
+          // it needs to be re-selected again.
+          editor.putString(getString(R.string.custom_config_key), text);
+          editor.putString(getString(R.string.config_summary_key), data.getData().getPath());
+          editor.commit();
+          Preference customConfig =
+              (Preference) findPreference(getString(R.string.custom_config_key));
+          customConfig.setSummary(data.getData().getPath());
+        }
+      } catch (Exception e) {
+        Log.e("Setting", "Failed to read text config file: " + e.getMessage());
       }
     }
   }
