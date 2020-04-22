@@ -17,17 +17,10 @@ If you want to use a subset of images, remember to use the first N ones.
 ## COCO
 
 Download the COCO 2017 dataset from
-[http://cocodataset.org/#download](http://cocodataset.org/#download) and the
-upscale_coco.py from
-[https://github.com/mlperf/inference/blob/master/v0.5/tools/upscale_coco](https://github.com/mlperf/inference/blob/master/v0.5/tools/upscale_coco).
-Then use the script to process the images:
-
-```bash
-python upscale_coco.py --inputs /path-to-coco/ --outputs /output-path/ --size 300 300
-```
+[http://cocodataset.org/#download](http://cocodataset.org/#download).
 
 The ground truth file is
-[coco_val.pbtxt](java/org/mlperf/inference/assets/coco_val.pbtxt) If you want to
+[coco_val.pb](java/org/mlperf/inference/assets/coco_val.pb) If you want to
 use a subset of images, remember to use the first N images which appear in the
 file instances_val2017.json. **Note** that the order of images in this file and
 the order of images under the images directory are not the same.

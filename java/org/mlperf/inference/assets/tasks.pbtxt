@@ -28,7 +28,7 @@ task {
     name: "Coco 2017"
     type: COCO
     path: "/sdcard/mlperf_datasets/coco/img/"
-    groundtruth_src: "@assets/coco_val.pbtxt"
+    groundtruth_src: "@assets/coco_val.pb"
   }
   model {
     name: "SSD-MobileNets-v2 UInt8"

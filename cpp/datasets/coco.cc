@@ -28,7 +28,6 @@ limitations under the License.
 
 #include "cpp/dataset.h"
 #include "cpp/utils.h"
-#include "src/google/protobuf/text_format.h"
 #include "tensorflow/lite/tools/evaluation/proto/evaluation_stages.pb.h"
 #include "tensorflow/lite/tools/evaluation/stages/image_preprocessing_stage.h"
 #include "tensorflow/lite/tools/evaluation/stages/object_detection_average_precision_stage.h"
@@ -48,6 +47,10 @@ inline TfLiteType DataType2TfType(DataType::Type type) {
       return kTfLiteInt8;
     case DataType::Float16:
       return kTfLiteFloat16;
+    case DataType::Int32:
+      return kTfLiteInt32;
+    case DataType::Int64:
+      return kTfLiteInt64;
   }
   return kTfLiteNoType;
 }
@@ -169,7 +172,7 @@ float Coco::ComputeAccuracy() {
   std::string proto_str((std::istreambuf_iterator<char>(t)),
                         std::istreambuf_iterator<char>());
   tflite::evaluation::ObjectDetectionGroundTruth ground_truth_proto;
-  google::protobuf::TextFormat::ParseFromString(proto_str, &ground_truth_proto);
+  ground_truth_proto.ParseFromString(proto_str);
   absl::flat_hash_map<std::string, tflite::evaluation::ObjectDetectionResult>
       groundtruth_objects;
   for (auto image_ground_truth : ground_truth_proto.detection_results()) {

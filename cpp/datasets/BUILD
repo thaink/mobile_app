@@ -68,7 +68,6 @@ cc_library(
         "//cpp:mlperf_driver",
         "//cpp:utils",
         "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_protobuf//:protobuf",
         "@org_tensorflow//tensorflow/lite/tools/evaluation:utils",
         "@org_tensorflow//tensorflow/lite/tools/evaluation/proto:evaluation_stages_cc_proto",
         "@org_tensorflow//tensorflow/lite/tools/evaluation/stages:image_preprocessing_stage",
