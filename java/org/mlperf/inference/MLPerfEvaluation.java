@@ -473,7 +473,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
 
   // ModelExtractTask copies or downloads files to their location (external storage) when
   // they're not available.
-  private static class ModelExtractTask extends AsyncTask<Void, Void, Void> {
+  private static class ModelExtractTask extends AsyncTask<Void, String, Void> {
     private final WeakReference<Context> contextRef;
     private final MLPerfConfig mlperfTasks;
     private boolean success = true;
@@ -507,7 +507,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     private boolean extractFile(String src) {
       String dest = MLPerfTasks.getLocalPath(src);
       File destFile = new File(dest);
-      ((MLPerfEvaluation) contextRef.get()).logProgress("Extracting " + destFile.getName() + "...");
+      publishProgress(destFile.getName());
       destFile.getParentFile().mkdirs();
       // Extract to a temporary file first, so the app can detects if the extraction failed.
       File tmpFile = new File(dest + ".tmp");
@@ -553,6 +553,11 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     @Override
     protected void onPreExecute() {
       ((MLPerfEvaluation) contextRef.get()).logProgress("Extracting missing files...");
+    }
+
+    @Override
+    protected void onProgressUpdate(String... filenames) {
+      ((MLPerfEvaluation) contextRef.get()).logProgress("Extracting " + filenames[0] + "...");
     }
 
     @Override

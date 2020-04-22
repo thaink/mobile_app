@@ -15,7 +15,7 @@
     Accelerators
   </string>
   <string name="pref_delegate_key" description="Delegates Pref Key [CHAR_LIMIT=50]">
-    delegate_preference
+    delegate_preference_v2
   </string>
   <string name="pref_delegate_sum" description="Delegates Pref Summary [CHAR_LIMIT=50]">
     Accelerators for TFLite
@@ -42,7 +42,7 @@
     Only run selected models
   </string>
   <string name="models_preference_key" description="Selecting Models Pref Key [CHAR_LIMIT=50]">
-    selected_models
+    selected_models_v2
   </string>
   <string name="custom_config_key" description="Selecting custom config Key [CHAR_LIMIT=50]">
     custom_config
