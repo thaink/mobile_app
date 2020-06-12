@@ -86,7 +86,16 @@ This directory contains all models in TFLite that are used for MLPerf.
 
 ## Language Understanding
 
-1. mobilebert_float_20191023
+1. mobilebert_float_384_20200602
 
     *   Source:
-        https://storage.googleapis.com/download.tensorflow.org/models/tflite/bert_qa/mobilebert_float_20191023.tflite
+        https://zenodo.org/record/3878955#.Xtpz9p5KjUI
+
+    *   Accuracy: 90 F1
+
+2. mobilebert_int8_384_20200602
+
+    *   Source:
+        https://zenodo.org/record/3878955#.Xtpz9p5KjUI
+
+    *   Accuracy: 88 F1
