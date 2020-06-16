@@ -43,7 +43,7 @@ jobs:
         chmod +x bazel-2.0.0-darwin-x86_64 && ./bazel-2.0.0-darwin-x86_64 --version
 
     - name: Install dependencies
-      run: python3 -m pip install six && python -m pip install absl-py future
+      run: python3 -m pip install six numpy && python -m pip install absl-py future numpy
 
     - name: Run tests
       uses: reactivecircus/android-emulator-runner@v2

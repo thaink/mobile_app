@@ -51,8 +51,8 @@ frameworks contributed by the broader MLPerf community.
 ## Getting Started
 
 There are two ways to build the app. If you want to make your own environment,
-first make sure to download the SDK and NDK using the Android studio. Then set
-the following environment variables:
+first make sure to download the SDK and NDK using the Android studio. Android 
+NDK version 18b or newer is required. Then set the following environment variables:
 
 ```bash
 export ANDROID_HOME=Path/to/SDK # Ex: $HOME/Android/Sdk

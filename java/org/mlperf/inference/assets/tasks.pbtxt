@@ -55,8 +55,13 @@ task {
   }
   model {
     name: "MobileBert F32"
-    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_float_20191023.tflite"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_float_384_20200602.tflite"
     tags: "float32"
+  }
+  model {
+    name: "MobileBert Int8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_int8_384_20200602.tflite"
+    tags: "int8"
   }
   min_query_count: 100
   min_duration_ms: 1000

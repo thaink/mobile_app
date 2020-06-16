@@ -73,10 +73,10 @@ int Main(int argc, char* argv[]) {
   std::vector<Flag> flag_list{
       Flag::CreateFlag("backend", &backend_name,
                        "Backend. Only TFLite is supported at the moment.",
-                       Flag::POSITIONAL),
+                       Flag::kPositional),
       Flag::CreateFlag("dataset", &dataset_name,
                        "Dataset. One of imagenet, coco, mobilebert or dummy.",
-                       Flag::POSITIONAL)};
+                       Flag::kPositional)};
   Flags::Parse(&argc, const_cast<const char**>(argv), flag_list);
   backend_type = Str2BackendType(backend_name);
   dataset_type = Str2DatasetType(dataset_name);
@@ -97,7 +97,7 @@ int Main(int argc, char* argv[]) {
       {Flag::CreateFlag("mode", &mode,
                         "Mode is one among PerformanceOnly, "
                         "AccuracyOnly, SubmissionRun.",
-                        Flag::REQUIRED),
+                        Flag::kRequired),
        Flag::CreateFlag("min_query_count", &min_query_count,
                         "The test will guarantee to run at least this "
                         "number of samples in performance mode."),
@@ -105,7 +105,7 @@ int Main(int argc, char* argv[]) {
                         "The test will guarantee to run at least this "
                         "duration in performance mode. The duration is in ms."),
        Flag::CreateFlag("output_dir", &output_dir,
-                        "The output directory of mlperf.", Flag::REQUIRED)});
+                        "The output directory of mlperf.", Flag::kRequired)});
 
   // Command Line Flags for backend.
   std::unique_ptr<Backend> backend;
@@ -118,7 +118,7 @@ int Main(int argc, char* argv[]) {
       flag_list.insert(
           flag_list.end(),
           {Flag::CreateFlag("model_file", &model_file_path,
-                            "Path to TFLite model file.", Flag::REQUIRED),
+                            "Path to TFLite model file.", Flag::kRequired),
            Flag::CreateFlag("num_threads", &num_threads,
                             "Number of interpreter threads for inference."),
            Flag::CreateFlag("delegate", &delegate,
@@ -149,14 +149,14 @@ int Main(int argc, char* argv[]) {
       int offset = 1, image_width = 224, image_height = 224;
       std::vector<Flag> dataset_flags{
           Flag::CreateFlag("images_directory", &images_directory,
-                           "Path to ground truth images.", Flag::REQUIRED),
+                           "Path to ground truth images.", Flag::kRequired),
           Flag::CreateFlag("offset", &offset,
                            "The offset of the first meaningful class in the "
                            "classification model.",
-                           Flag::REQUIRED),
+                           Flag::kRequired),
           Flag::CreateFlag("groundtruth_file", &groundtruth_file,
                            "Path to the imagenet ground truth file.",
-                           Flag::REQUIRED),
+                           Flag::kRequired),
           Flag::CreateFlag("image_width", &image_width,
                            "The width of the processed image."),
           Flag::CreateFlag("image_height", &image_height,
@@ -178,17 +178,17 @@ int Main(int argc, char* argv[]) {
       int offset = 1, num_classes = 91, image_width = 300, image_height = 300;
       std::vector<Flag> dataset_flags{
           Flag::CreateFlag("images_directory", &images_directory,
-                           "Path to ground truth images.", Flag::REQUIRED),
+                           "Path to ground truth images.", Flag::kRequired),
           Flag::CreateFlag("offset", &offset,
                            "The offset of the first meaningful class in the "
                            "classification model.",
-                           Flag::REQUIRED),
+                           Flag::kRequired),
           Flag::CreateFlag("num_classes", &num_classes,
                            "The number of classes in the model outputs.",
-                           Flag::REQUIRED),
+                           Flag::kRequired),
           Flag::CreateFlag("groundtruth_file", &groundtruth_file,
                            "Path to the imagenet ground truth file.",
-                           Flag::REQUIRED),
+                           Flag::kRequired),
           Flag::CreateFlag("image_width", &image_width,
                            "The width of the processed image."),
           Flag::CreateFlag("image_height", &image_height,
