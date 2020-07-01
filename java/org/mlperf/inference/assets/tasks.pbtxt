@@ -59,9 +59,19 @@ task {
     tags: "float32"
   }
   model {
+    name: "MobileBert F32 for GPU"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_float_384_gpu.tflite"
+    tags: "float32-gpu"
+  }
+  model {
     name: "MobileBert Int8"
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_int8_384_20200602.tflite"
     tags: "int8"
+  }
+  model {
+    name: "MobileBert Int8 for NNAPI"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/mobilebert_int8_384_nnapi.tflite"
+    tags: "int8-nnapi"
   }
   min_query_count: 100
   min_duration_ms: 1000
