@@ -49,9 +49,10 @@ task {
 task {
   name: " Language Understanding"
   dataset {
-    name: "Dummy"
-    type: MOBILEBERT
-    path: "/sdcard/mlperf_datasets/mobilebert/"
+    name: "Squad"
+    type: SQUAD
+    path: "@assets/squad_eval.tfrecord"
+    groundtruth_src: "@assets/squad_groundtruth.tfrecord"
   }
   model {
     name: "MobileBert F32"

@@ -502,6 +502,12 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
           }
         }
         DatasetConfig dataset = task.getDataset();
+        if (dataset.getPath().startsWith(ASSETS_PREFIX)
+            && !new File(MLPerfTasks.getLocalPath(dataset.getPath())).canRead()) {
+          if (!extractFile(dataset.getPath())) {
+            success = false;
+          }
+        }
         if (!new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead()) {
           if (!extractFile(dataset.getGroundtruthSrc())) {
             success = false;

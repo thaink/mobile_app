@@ -69,7 +69,8 @@ public final class RunMLPerfWorker implements Handler.Callback {
     TaskConfig taskConfig = MLPerfTasks.getConfig(context).getTask(data.taskIdx);
     ModelConfig modelConfig = taskConfig.getModel(data.modelIdx);
     DatasetConfig dataset = taskConfig.getDataset();
-    boolean useDummyDataSet = !new File(dataset.getPath()).isDirectory();
+    boolean useDummyDataSet =
+        !dataset.getPath().contains("@assets/") && !new File(dataset.getPath()).isDirectory();
     String modelName = modelConfig.getName();
     String runtime = computeRuntimeString(data.numThreads, data.delegate);
     replyWithUpdateMessage(
@@ -109,6 +110,11 @@ public final class RunMLPerfWorker implements Handler.Callback {
                 /*numClasses=*/ 91,
                 /*imageWidth=*/ 300,
                 /*imageHeight=*/ 300);
+            break;
+          case SQUAD:
+            builder.useSquad(
+                MLPerfTasks.getLocalPath(dataset.getPath()),
+                MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc()));
             break;
         }
       }

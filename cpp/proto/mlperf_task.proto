@@ -56,7 +56,7 @@ message DatasetConfig {
     NONE = 0;
     IMAGENET = 1;
     COCO = 2;
-    MOBILEBERT = 3;
+    SQUAD = 3;
     ADE20K = 4;
   }
   required DatasetType type = 2;

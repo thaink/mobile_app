@@ -101,6 +101,9 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
       int imageWidth,
       int imageHeight);
 
+  // Return a pointer of a new Squad C++ object.
+  private static native long squad(long backendHandle, String inputFile, String groundtruthFile);
+
   // Return a pointer of a new DummyDataset C++ object.
   private static native long dummyDataset(long backendHandle, int datasetType);
 
@@ -161,6 +164,12 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
       dataset =
           coco(
               getBackend(), imageDir, groundtruthFile, offset, numClasses, imageWidth, imageHeight);
+      return this;
+    }
+
+    public Builder useSquad(String inputFile, String groundtruthFile) {
+      nativeDeleteDataset(dataset);
+      dataset = squad(getBackend(), inputFile, groundtruthFile);
       return this;
     }
 

@@ -40,6 +40,7 @@ cc_library(
         "//cpp/datasets:coco",
         "//cpp/datasets:dummy_dataset",
         "//cpp/datasets:imagenet",
+        "//cpp/datasets:squad",
         "//cpp/proto:mlperf_task_cc_proto",
         "@com_google_protobuf//:protobuf",
         "@org_tensorflow//tensorflow/lite/java/src/main/native",

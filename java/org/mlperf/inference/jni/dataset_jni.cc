@@ -21,6 +21,7 @@ limitations under the License.
 #include "cpp/datasets/coco.h"
 #include "cpp/datasets/dummy_dataset.h"
 #include "cpp/datasets/imagenet.h"
+#include "cpp/datasets/squad.h"
 #include "tensorflow/lite/java/src/main/native/jni_utils.h"
 
 using mlperf::mobile::Backend;
@@ -70,6 +71,21 @@ JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_coco(
       backend->GetInputFormat(), backend->GetOutputFormat(), image_dir, gt_file,
       offset, num_classes, image_width, image_height));
   return reinterpret_cast<jlong>(coco_ptr.release());
+}
+
+JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_squad(
+    JNIEnv* env, jclass clazz, jlong backend_handle, jstring jinput_file,
+    jstring jgroundtruth_file) {
+  // Convert parameters to C++.
+  Backend* backend = convertLongToBackend(env, backend_handle);
+  std::string input_file = env->GetStringUTFChars(jinput_file, nullptr);
+  std::string gt_file = env->GetStringUTFChars(jgroundtruth_file, nullptr);
+
+  // Create a new Squad object.
+  std::unique_ptr<mlperf::mobile::Squad> squad_ptr(new mlperf::mobile::Squad(
+      backend->GetInputFormat(), backend->GetOutputFormat(), input_file,
+      gt_file));
+  return reinterpret_cast<jlong>(squad_ptr.release());
 }
 
 JNIEXPORT jlong JNICALL

@@ -16,14 +16,14 @@ jobs:
       with:
         args: >
           --output_user_root=/github/workflow/cache/bazel build
-          -c opt --cxxopt="--std=c++17" //...
+          -c opt --cxxopt="--std=c++14" //...
 
     - name: Run unit tests
       uses: docker://thaink/android-bazel:latest
       with:
         args: >
           --output_user_root=/github/workflow/cache/bazel test --test_output=streamed
-          -c opt --cxxopt="--std=c++17" //cpp/...
+          -c opt --cxxopt="--std=c++14" //cpp/...
 
   test:
     name: Instrument tests

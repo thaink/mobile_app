@@ -23,6 +23,7 @@ limitations under the License.
 #include "cpp/datasets/coco.h"
 #include "cpp/datasets/dummy_dataset.h"
 #include "cpp/datasets/imagenet.h"
+#include "cpp/datasets/squad.h"
 #include "cpp/mlperf_driver.h"
 #include "cpp/proto/mlperf_task.pb.h"
 #include "cpp/utils.h"
@@ -50,8 +51,8 @@ DatasetConfig::DatasetType Str2DatasetType(absl::string_view name) {
     return DatasetConfig::COCO;
   } else if (absl::EqualsIgnoreCase(name, "IMAGENET")) {
     return DatasetConfig::IMAGENET;
-  } else if (absl::EqualsIgnoreCase(name, "MOBILEBERT")) {
-    return DatasetConfig::MOBILEBERT;
+  } else if (absl::EqualsIgnoreCase(name, "SQUAD")) {
+    return DatasetConfig::SQUAD;
   } else if (absl::EqualsIgnoreCase(name, "DUMMY")) {
     return DatasetConfig::NONE;
   } else {
@@ -75,7 +76,7 @@ int Main(int argc, char* argv[]) {
                        "Backend. Only TFLite is supported at the moment.",
                        Flag::kPositional),
       Flag::CreateFlag("dataset", &dataset_name,
-                       "Dataset. One of imagenet, coco, mobilebert or dummy.",
+                       "Dataset. One of imagenet, coco, squad or dummy.",
                        Flag::kPositional)};
   Flags::Parse(&argc, const_cast<const char**>(argv), flag_list);
   backend_type = Str2BackendType(backend_name);
@@ -204,13 +205,29 @@ int Main(int argc, char* argv[]) {
       flag_list.insert(flag_list.end(), dataset_flags.begin(),
                        dataset_flags.end());
     } break;
-    case DatasetConfig::MOBILEBERT: {
-      LOG(INFO) << "MobileBert is currently supported with random input.";
-      if (backend) {
-        dataset.reset(new DummyDataset(backend->GetInputFormat(),
-                                       backend->GetOutputFormat(),
-                                       DatasetConfig::MOBILEBERT));
+    case DatasetConfig::SQUAD: {
+      LOG(INFO) << "Using SQuAD 1.1 dataset for MobileBert.";
+      std::string input_tfrecord, gt_tfrecord;
+      std::vector<Flag> dataset_flags{
+          Flag::CreateFlag(
+              "input_file", &input_tfrecord,
+              "Path to the tfrecord file containing inputs for the model.",
+              Flag::kRequired),
+          Flag::CreateFlag(
+              "groundtruth_file", &gt_tfrecord,
+              "Path to the tfrecord file containing ground truth data.",
+              Flag::kRequired),
+      };
+
+      if (Flags::Parse(&argc, const_cast<const char**>(argv), dataset_flags) &&
+          backend) {
+        dataset.reset(new Squad(backend->GetInputFormat(),
+                                backend->GetOutputFormat(), input_tfrecord,
+                                gt_tfrecord));
       }
+      // Adds to flag_list for showing help.
+      flag_list.insert(flag_list.end(), dataset_flags.begin(),
+                       dataset_flags.end());
     } break;
     case DatasetConfig::NONE: {
       LOG(INFO) << "Using Dummy dataset";
