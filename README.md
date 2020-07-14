@@ -43,7 +43,7 @@ frameworks contributed by the broader MLPerf community.
 
 ## Requirements
 
-*   [Bazel](https://docs.bazel.build/versions/master/install-ubuntu.html)
+*   [Bazel 2.x](https://docs.bazel.build/versions/master/install-ubuntu.html)
 *   [Android SDK](https://developer.android.com/studio)
 *   Android 6.0+ (Marshmallow+) w/
     [USB debugging enabled](https://developer.android.com/studio/debug/dev-options)
