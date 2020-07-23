@@ -73,4 +73,8 @@ python cpp/datasets/squad_utils/generate_tfrecords.py \
 ```
 
 There are default tfrecord files [here](../../java/org/mlperf/inference/assets/)
-generated with above default parameters.
+generated with above default parameters. By default, the app will use a
+[mini version](../../java/org/mlperf/inference/assets/squad_eval_mini.tfrecord)
+of the dataset with 160 random questions. To evaluate using the full dataset,
+you need to replace `squad_eval_mini.tfrecord` by `squad_eval.tfrecord` in the
+`java/org/mlperf/inference/assets/tasks.pbtxt` file.

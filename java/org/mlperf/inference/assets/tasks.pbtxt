@@ -51,7 +51,7 @@ task {
   dataset {
     name: "Squad"
     type: SQUAD
-    path: "@assets/squad_eval.tfrecord"
+    path: "@assets/squad_eval_mini.tfrecord"
     groundtruth_src: "@assets/squad_groundtruth.tfrecord"
   }
   model {

@@ -62,7 +62,7 @@ export ANDROID_NDK_HOME=Path/to/NDK # Ex: $ANDROID_HOME/ndk/(your version)
 The app can be built and installed with the following commands:
 
 ```bash
-bazel build -c opt --cxxopt='--std=c++14' \
+bazel build -c opt --cxxopt='--std=c++14' --host_cxxopt='--std=c++14' \
     --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a \
     //java/org/mlperf/inference:mlperf_app
 
@@ -78,7 +78,7 @@ docker run \
     -v <path to your cache dir>:/cache \
     -w /mobile_app \
     thaink/android-bazel:latest --output_user_root=/cache/bazel build \
-    -c opt --cxxopt='--std=c++14' \
+    -c opt --cxxopt='--std=c++14' --host_cxxopt='--std=c++14' \
     --fat_apk_cpu=x86,arm64-v8a,armeabi-v7a \
     //java/org/mlperf/inference:mlperf_app
 
