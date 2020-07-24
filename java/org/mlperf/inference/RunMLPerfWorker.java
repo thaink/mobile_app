@@ -100,7 +100,8 @@ public final class RunMLPerfWorker implements Handler.Callback {
                 MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc()),
                 modelConfig.getOffset(),
                 /*imageWidth=*/ 224,
-                /*imageHeight=*/ 224);
+                /*imageHeight=*/ 224,
+                modelConfig.getScenario());
             break;
           case COCO:
             builder.useCoco(
@@ -120,7 +121,11 @@ public final class RunMLPerfWorker implements Handler.Callback {
       }
       MLPerfDriverWrapper driverWrapper = builder.build();
       driverWrapper.runMLPerf(
-          mode, taskConfig.getMinQueryCount(), taskConfig.getMinDurationMs(), data.outputFolder);
+          mode,
+          modelConfig.getScenario(),
+          taskConfig.getMinQueryCount(),
+          taskConfig.getMinDurationMs(),
+          data.outputFolder);
       replyWithUpdateMessage(messenger, "Finished running \"" + modelName + "\".", REPLY_UPDATE);
       replyWithCompleteMessage(
           messenger, modelName, runtime, driverWrapper.getLatency(), driverWrapper.getAccuracy());

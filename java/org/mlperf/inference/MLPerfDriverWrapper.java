@@ -33,13 +33,15 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
    * {@link runMLPerf} runs a specific model with mlperf.
    *
    * @param mode could be a string of PerformanceOnly, AccuracyOnly or SubmissionRun (both).
+   * @param scenario is a custom scenario string to use custom config in mlperf_driver.cc.
    * @param minQueryCount is the minimum number of samples should be run.
    * @param minDurationMs is the minimum duration in ms. After both conditions are met, the test
    *     ends.
    * @param outputDir is the directory to store the log files.
    */
-  public void runMLPerf(String mode, int minQueryCount, int minDurationMs, String outputDir) {
-    nativeRun(driverHandle, mode, minQueryCount, minDurationMs, outputDir);
+  public void runMLPerf(
+      String mode, String scenario, int minQueryCount, int minDurationMs, String outputDir) {
+    nativeRun(driverHandle, mode, scenario, minQueryCount, minDurationMs, outputDir);
   }
 
   // The latency in ms is formatted with two decimal places.
@@ -69,7 +71,12 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
   private native long nativeInit(long datasetHandle, long backendHandle);
 
   private native void nativeRun(
-      long driverHandle, String jmode, int minQueryCount, int minDuration, String outputDir);
+      long driverHandle,
+      String jmode,
+      String jscenario,
+      int minQueryCount,
+      int minDuration,
+      String outputDir);
 
   private native String nativeGetLatency(long handle);
 
@@ -89,7 +96,8 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
       String groundtruthFile,
       int offset,
       int imageWidth,
-      int imageHeight);
+      int imageHeight,
+      String scenario);
 
   // Return a pointer of a new Coco C++ object.
   private static native long coco(
@@ -146,9 +154,16 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
     // Offset is used to match ground-truth categories with model output.
     // Some models assume class 0 is background class thus they have offset=1.
     public Builder useImagenet(
-        String imageDir, String groundtruthFile, int offset, int imageWidth, int imageHeight) {
+        String imageDir,
+        String groundtruthFile,
+        int offset,
+        int imageWidth,
+        int imageHeight,
+        String scenario) {
       nativeDeleteDataset(dataset);
-      dataset = imagenet(getBackend(), imageDir, groundtruthFile, offset, imageWidth, imageHeight);
+      dataset =
+          imagenet(
+              getBackend(), imageDir, groundtruthFile, offset, imageWidth, imageHeight, scenario);
       return this;
     }
 

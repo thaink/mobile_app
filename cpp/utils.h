@@ -17,6 +17,7 @@ limitations under the License.
 
 #include <cstdint>
 #include <numeric>
+#include <string>
 #include <vector>
 
 #include "loadgen/test_settings.h"
@@ -91,6 +92,9 @@ inline ::mlperf::TestMode Str2TestMode(const std::string& mode) {
     return ::mlperf::TestMode::PerformanceOnly;
   }
 }
+
+const std::string kMobilenetOfflineScenario = "mobilenet-offline";
+const size_t kMobilenetOfflineSampleCount = 5000;
 
 }  // namespace mobile
 }  // namespace mlperf

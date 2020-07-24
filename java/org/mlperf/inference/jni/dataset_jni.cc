@@ -42,18 +42,19 @@ extern "C" {
 
 JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_imagenet(
     JNIEnv* env, jclass clazz, jlong backend_handle, jstring jimage_dir,
-    jstring jgroundtruth_file, jint offset, jint image_width,
-    jint image_height) {
+    jstring jgroundtruth_file, jint offset, jint image_width, jint image_height,
+    jstring jscenario) {
   // Convert parameters to C++.
   Backend* backend = convertLongToBackend(env, backend_handle);
   std::string image_dir = env->GetStringUTFChars(jimage_dir, nullptr);
   std::string gt_file = env->GetStringUTFChars(jgroundtruth_file, nullptr);
+  std::string scenario = env->GetStringUTFChars(jscenario, nullptr);
 
   // Create a new Imagenet object.
   std::unique_ptr<mlperf::mobile::Imagenet> imagenet_ptr(
-      new mlperf::mobile::Imagenet(backend->GetInputFormat(),
-                                   backend->GetOutputFormat(), image_dir,
-                                   gt_file, offset, image_width, image_height));
+      new mlperf::mobile::Imagenet(
+          backend->GetInputFormat(), backend->GetOutputFormat(), image_dir,
+          gt_file, offset, image_width, image_height, scenario));
   return reinterpret_cast<jlong>(imagenet_ptr.release());
 }
 

@@ -90,7 +90,7 @@ int Main(int argc, char* argv[]) {
   command_line += " " + backend_name + " " + dataset_name;
 
   // Command Line Flags for mlperf.
-  std::string mode, output_dir;
+  std::string mode, scenario, output_dir;
   int min_query_count = 100, min_duration = 100;
   flag_list.clear();
   flag_list.insert(
@@ -167,7 +167,7 @@ int Main(int argc, char* argv[]) {
         dataset.reset(new Imagenet(backend->GetInputFormat(),
                                    backend->GetOutputFormat(), images_directory,
                                    groundtruth_file, offset, image_width,
-                                   image_height));
+                                   image_height, scenario));
       }
       // Adds to flag_list for showing help.
       flag_list.insert(flag_list.end(), dataset_flags.begin(),
@@ -253,7 +253,8 @@ int Main(int argc, char* argv[]) {
 
   // Running mlperf.
   MlperfDriver driver(std::move(dataset), std::move(backend));
-  driver.RunMLPerfTest(mode, min_query_count, min_duration, output_dir);
+  driver.RunMLPerfTest(mode, scenario, min_query_count, min_duration,
+                       output_dir);
   LOG(INFO) << "90 percentile latency: " << driver.ComputeLatencyString();
   LOG(INFO) << "Accuracy: " << driver.ComputeAccuracyString();
   return 0;
