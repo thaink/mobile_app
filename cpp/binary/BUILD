@@ -35,6 +35,7 @@ cc_binary(
         "//cpp:mlperf_driver",
         "//cpp:utils",
         "//cpp/backends:tflite",
+        "//cpp/datasets:ade20k",
         "//cpp/datasets:coco",
         "//cpp/datasets:dummy_dataset",
         "//cpp/datasets:imagenet",

@@ -95,3 +95,17 @@ cc_library(
         ],
     }),
 )
+
+cc_library(
+    name = "ade20k",
+    srcs = ["ade20k.cc"],
+    hdrs = ["ade20k.h"],
+    deps = [
+        "//cpp:mlperf_driver",
+        "//cpp:utils",
+        "@org_tensorflow//tensorflow/lite/kernels:kernel_util",
+        "@org_tensorflow//tensorflow/lite/tools/evaluation:utils",
+        "@org_tensorflow//tensorflow/lite/tools/evaluation/proto:evaluation_stages_cc_proto",
+        "@org_tensorflow//tensorflow/lite/tools/evaluation/stages:image_preprocessing_stage",
+    ],
+)

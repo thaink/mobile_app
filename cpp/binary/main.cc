@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "absl/strings/match.h"
 #include "cpp/backends/tflite.h"
+#include "cpp/datasets/ade20k.h"
 #include "cpp/datasets/coco.h"
 #include "cpp/datasets/dummy_dataset.h"
 #include "cpp/datasets/imagenet.h"
@@ -53,6 +54,8 @@ DatasetConfig::DatasetType Str2DatasetType(absl::string_view name) {
     return DatasetConfig::IMAGENET;
   } else if (absl::EqualsIgnoreCase(name, "SQUAD")) {
     return DatasetConfig::SQUAD;
+  } else if (absl::EqualsIgnoreCase(name, "ADE20K")) {
+    return DatasetConfig::ADE20K;
   } else if (absl::EqualsIgnoreCase(name, "DUMMY")) {
     return DatasetConfig::NONE;
   } else {
@@ -224,6 +227,33 @@ int Main(int argc, char* argv[]) {
         dataset.reset(new Squad(backend->GetInputFormat(),
                                 backend->GetOutputFormat(), input_tfrecord,
                                 gt_tfrecord));
+      }
+      // Adds to flag_list for showing help.
+      flag_list.insert(flag_list.end(), dataset_flags.begin(),
+                       dataset_flags.end());
+    } break;
+    case DatasetConfig::ADE20K: {
+      LOG(INFO) << "Using ADE20K dataset";
+      std::string images_directory, ground_truth_directory;
+      int num_classes = 31;
+      int image_width = 512, image_height = 512;
+      std::vector<Flag> dataset_flags{
+          Flag::CreateFlag("images_directory", &images_directory,
+                           "Path to ground truth images.", Flag::kRequired),
+          Flag::CreateFlag("ground_truth_directory", &ground_truth_directory,
+                           "Path to the imagenet ground truth file.",
+                           Flag::kRequired),
+          Flag::CreateFlag("num_class", &num_classes, "number of classes"),
+          Flag::CreateFlag("image_width", &image_width,
+                           "The width of the processed image."),
+          Flag::CreateFlag("image_height", &image_height,
+                           "The height of the processed image.")};
+      if (Flags::Parse(&argc, const_cast<const char**>(argv), dataset_flags) &&
+          backend) {
+        dataset.reset(new ADE20K(backend->GetInputFormat(),
+                                 backend->GetOutputFormat(), images_directory,
+                                 ground_truth_directory, num_classes,
+                                 image_width, image_height));
       }
       // Adds to flag_list for showing help.
       flag_list.insert(flag_list.end(), dataset_flags.begin(),
