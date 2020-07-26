@@ -116,6 +116,13 @@ public final class RunMLPerfWorker implements Handler.Callback {
             builder.useSquad(
                 MLPerfTasks.getLocalPath(dataset.getPath()),
                 MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc()));
+          case ADE20K:
+            builder.useAde20k(
+                dataset.getPath() + "images",
+                dataset.getPath() + "annotations",
+                /*numClasses=*/ 31,
+                /*imageWidth=*/ 512,
+                /*imageHeight=*/ 512);
             break;
         }
       }
