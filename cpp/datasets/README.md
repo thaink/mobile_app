@@ -88,7 +88,7 @@ from PIL import Image as Image
 
 tf.enable_eager_execution()
 
-ADE20K_PATH='/home/freedom/tf-models/research/deeplab/datasets/ADE20K/ADEChallengeData2016/'
+ADE20K_PATH=${HOME}/tf-models/research/deeplab/datasets/ADE20K/ADEChallengeData2016/'
 
 for i in range(1, 2001):
     image_jpeg = ADE20K_PATH+f'images/validation/ADE_val_0000{i:04}.jpg'

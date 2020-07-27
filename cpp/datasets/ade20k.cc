@@ -57,7 +57,7 @@ ADE20K::ADE20K(const DataFormat& input_format, const DataFormat& output_format,
       image_width_(image_width),
       image_height_(image_height) {
   if (input_format_.size() != 1 || output_format_.size() != 1) {
-    LOG(FATAL) << "Imagenet only supports 1 input and 1 output";
+    LOG(FATAL) << "ADE20K model only supports 1 input and 1 output";
     return;
   }
   // Finds all images under image_dir.
@@ -70,7 +70,6 @@ ADE20K::ADE20K(const DataFormat& input_format, const DataFormat& output_format,
   }
   samples_ =
       std::vector<std::vector<std::vector<uint8_t>*>>(image_list_.size());
-  LOG(INFO) << "size: " << samples_.size();
   // Finds all ground truth files under ground_truth_dir.
   std::unordered_set<std::string> gt_exts{".raw"};
   ret = tflite::evaluation::GetSortedFileNames(
@@ -80,7 +79,6 @@ ADE20K::ADE20K(const DataFormat& input_format, const DataFormat& output_format,
     LOG(FATAL) << "Failed to list all the ground truth files in provided path";
     return;
   }
-  LOG(INFO) << "gt size: " << ground_truth_list_.size();
 
   // Prepares the preprocessing stage.
   tflite::evaluation::ImagePreprocessingConfigBuilder builder(

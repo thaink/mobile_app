@@ -1,4 +1,4 @@
-/* Copyright 2012 The MLPerf Authors. All Rights Reserved.
+/* Copyright 2020 The MLPerf Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,7 +43,10 @@ class ADE20K : public Dataset {
   // Total number of samples in library.
   size_t TotalSampleCount() override { return samples_.size(); }
 
+  // Loads the requested query samples into memory.
   void LoadSamplesToRam(const std::vector<QuerySampleIndex>& samples) override;
+
+  // Unloads the requested query samples from memory.
   void UnloadSamplesFromRam(
       const std::vector<QuerySampleIndex>& samples) override;
 
@@ -79,13 +82,13 @@ class ADE20K : public Dataset {
   std::unique_ptr<tflite::evaluation::ImagePreprocessingStage>
       preprocessing_stage_;
 
-  // number of classes
+  // Number of classes in the output of the model.
   int num_classes_;
 
-  // image w, h
+  // The width and height of the input images.
   int image_width_, image_height_;
 
-  // accumulators for true positive, false positive, and false negative
+  // Accumulators for true positive, false positive, and false negative.
   std::vector<uint64_t> tp_acc_, fp_acc_, fn_acc_;
 
   bool initialized_ = false;

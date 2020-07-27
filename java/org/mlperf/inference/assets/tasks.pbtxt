@@ -101,12 +101,12 @@ task {
   }
   model {
     name: "Deeplab-v3 Mobilenet-v2 F32"
-    src: "https://github.com/freedomtan/mobile_app/raw/model_repo_v0.7_deeplabv3/tflite/deeplabv3_mnv2_ade20k_float.tflite"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/deeplabv3_mnv2_ade20k_float.tflite"
     tags: "float32"
   }
   model {
     name: "Deeplab-v3 Mobilenet-v2 UINT8"
-    src: "https://github.com/freedomtan/mobile_app/raw/model_repo_v0.7_deeplabv3/tflite/deeplabv3_mnv2_ade20k_uint8.tflite"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/deeplabv3_mnv2_ade20k_uint8.tflite"
     tags: "uint8"
   }
   min_query_count: 100

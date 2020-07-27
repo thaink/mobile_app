@@ -99,7 +99,7 @@ JNIEXPORT jlong JNICALL Java_org_mlperf_inference_MLPerfDriverWrapper_ade20k(
   std::string image_dir = env->GetStringUTFChars(jimage_dir, nullptr);
   std::string gt_dir = env->GetStringUTFChars(groundtruth_dir, nullptr);
 
-  // Create a new Coco object.
+  // Create a new Ade20k object.
   std::unique_ptr<mlperf::mobile::ADE20K> ade20k_ptr(new mlperf::mobile::ADE20K(
       backend->GetInputFormat(), backend->GetOutputFormat(), image_dir, gt_dir,
       num_classes, image_width, image_height));
