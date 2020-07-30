@@ -110,6 +110,11 @@ task {
     src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/deeplabv3_mnv2_ade20k_uint8.tflite"
     tags: "uint8"
   }
+  model {
+    name: "Deeplab-v3 Mobilenet-v2 INT8"
+    src: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/tflite/deeplabv3_mnv2_ade20k_int8.tflite"
+    tags: "int8"
+  }
   min_query_count: 100
   min_duration_ms: 1000
 }
