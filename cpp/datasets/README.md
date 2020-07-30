@@ -82,13 +82,15 @@ you need to replace `squad_eval_mini.tfrecord` by `squad_eval.tfrecord` in the
 ## ADE20K
 1. prepare 512x512 images and and ground truth file with something like the following
 ```python
+import os
 import tensorflow as tf
 import deeplab.input_preprocess
 from PIL import Image as Image
 
 tf.enable_eager_execution()
 
-ADE20K_PATH=${HOME}/tf-models/research/deeplab/datasets/ADE20K/ADEChallengeData2016/'
+home = os.getenv("HOME")
+ADE20K_PATH = home + '/tf-models/research/deeplab/datasets/ADE20K/ADEChallengeData2016/'
 
 for i in range(1, 2001):
     image_jpeg = ADE20K_PATH+f'images/validation/ADE_val_0000{i:04}.jpg'

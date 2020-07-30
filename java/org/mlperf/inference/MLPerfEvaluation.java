@@ -508,7 +508,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
             success = false;
           }
         }
-        if (!new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead()) {
+        if (dataset.getGroundtruthSrc().startsWith(ASSETS_PREFIX)
+            && (!new File(MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc())).canRead())) {
           if (!extractFile(dataset.getGroundtruthSrc())) {
             success = false;
           }

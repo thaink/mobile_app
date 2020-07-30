@@ -97,7 +97,8 @@ task {
   dataset {
     name: "ADE20k"
     type: ADE20K
-    path: "/sdcard/mlperf_datasets/ade20k/"
+    path: "/sdcard/mlperf_datasets/ade20k/images"
+    groundtruth_src: "/sdcard/mlperf_datasets/ade20k/annotations"
   }
   model {
     name: "Deeplab-v3 Mobilenet-v2 F32"
