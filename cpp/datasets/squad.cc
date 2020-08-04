@@ -157,6 +157,8 @@ float Squad::ComputeAccuracy() {
     }
 
     // Get the text from span tokens.
+    LOG(INFO) << "best_pred.start_index: " << best_pred.start_index;
+    LOG(INFO) << "best_pred.end_index: " << best_pred.end_index;
     SampleRecord sample(sample_reader_.ReadRecord(best_pred.sample_index));
     std::string pred_tokens = sample.span_tokens_[best_pred.start_index];
     for (int i = best_pred.start_index + 1; i <= best_pred.end_index; ++i) {
@@ -166,12 +168,15 @@ float Squad::ComputeAccuracy() {
     pred_tokens = absl::StrReplaceAll(pred_tokens, {{" ##", ""}, {"##", ""}});
     // Clean whitespace.
     absl::RemoveExtraAsciiWhitespace(&pred_tokens);
+    LOG(INFO) << "pred_tokens: " << pred_tokens;
 
     // Get the text from original tokens.
     int doc_start = sample.token_index_map_[best_pred.start_index -
                                             sample.query_tokens_length_];
     int doc_end = sample.token_index_map_[best_pred.end_index -
                                           sample.query_tokens_length_];
+    LOG(INFO) << "doc_start: " << doc_start;
+    LOG(INFO) << "doc_end: " << doc_end;
     GroundTruthRecord gt_record(
         gt_reader_.ReadRecord(qas_id_to_ground_truth_[qas_id]));
     std::string orig_tokens = gt_record.tokens[doc_start];

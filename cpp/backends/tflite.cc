@@ -108,7 +108,11 @@ TfLiteStatus TfliteBackend::ApplyDelegate(const std::string& delegate) {
       options.accelerator_name = accelerator_name.c_str();
     }
     delegate_ptr = tflite::evaluation::CreateNNAPIDelegate(options);
+  } else if (absl::StartsWithIgnoreCase(delegate, "hexagon")) {
+    delegate_ptr =
+        tflite::evaluation::CreateHexagonDelegate("/data/local/tmp", false);
   }
+
 #endif
 
   if (inference_stage_->ApplyCustomDelegate(std::move(delegate_ptr)) !=
