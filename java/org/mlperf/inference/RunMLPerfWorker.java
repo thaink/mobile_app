@@ -116,6 +116,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
             builder.useSquad(
                 MLPerfTasks.getLocalPath(dataset.getPath()),
                 MLPerfTasks.getLocalPath(dataset.getGroundtruthSrc()));
+            break;
           case ADE20K:
             builder.useAde20k(
                 dataset.getPath(),
