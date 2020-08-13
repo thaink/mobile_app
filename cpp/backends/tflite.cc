@@ -14,6 +14,7 @@ limitations under the License.
 ==============================================================================*/
 #include "cpp/backends/tflite.h"
 
+#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -21,6 +22,7 @@ limitations under the License.
 #include "absl/strings/match.h"
 #include "cpp/backend.h"
 #include "cpp/utils.h"
+#include "src/google/protobuf/text_format.h"
 #include "tensorflow/lite/kernels/kernel_util.h"
 #include "tensorflow/lite/tools/evaluation/proto/evaluation_stages.pb.h"
 #include "tensorflow/lite/tools/evaluation/stages/tflite_inference_stage.h"
@@ -54,6 +56,7 @@ inline DataType::Type TfType2DataType(TfLiteType type) {
 
 TfliteBackend::TfliteBackend(const std::string& model_file_path,
                              int num_threads) {
+  // Initializing TFLite inference stage.
   tflite::evaluation::EvaluationStageConfig inference_config;
   inference_config.set_name("inference_stage");
   auto* inference_params = inference_config.mutable_specification()

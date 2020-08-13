@@ -25,6 +25,7 @@ exports_files([
 proto_library(
     name = "mlperf_task_proto",
     srcs = [
+        "backend_setting.proto",
         "mlperf_task.proto",
     ],
     visibility = ["//visibility:public"],

@@ -1,13 +1,13 @@
 """Generate binary proto file from text format."""
 
-def convert_java_content(proto_message):
+def convert_java_content(name, proto_message):
     content = """
     package package_name;
 
     import com.google.protobuf.TextFormat;
     import java.io.*;
 
-    public final class Convert {
+    public final class _Convert {
       public static void main(String args[]) throws FileNotFoundException, IOException {
         BufferedReader br = new BufferedReader(new FileReader(args[0]));
         class_name.Builder builder = class_name.newBuilder();
@@ -19,7 +19,7 @@ def convert_java_content(proto_message):
     package_name = proto_message[:proto_message.rfind(".")]
     class_name = proto_message[proto_message.rfind(".") + 1:]
 
-    return content.replace("package_name", package_name).replace("class_name", class_name)
+    return content.replace("package_name", package_name).replace("class_name", class_name).replace("_Convert", name + "_Convert")
 
 def text_to_bin(name, src, out, proto_message, proto_deps):
     """Convert a text proto file to binary file.
@@ -38,17 +38,17 @@ def text_to_bin(name, src, out, proto_message, proto_deps):
     """
 
     native.genrule(
-        name = "gen_convert_java",
-        outs = ["Convert.java"],
-        cmd = "echo '" + convert_java_content(proto_message) + "' > $@",
+        name = "%s_gen_convert_java" % name,
+        outs = ["%s_Convert.java" % name],
+        cmd = "echo '" + convert_java_content(name, proto_message) + "' > $@",
     )
 
     native.java_binary(
-        name = "Convert",
+        name = "%s_Convert" % name,
         srcs = [
-            "Convert.java",
+            "%s_Convert.java" % name,
         ],
-        main_class = "org.mlperf.proto.Convert",
+        main_class = "org.mlperf.proto.%s_Convert" % name,
         deps = proto_deps + [
             "@com_google_protobuf//:protobuf_java",
         ],
@@ -58,7 +58,7 @@ def text_to_bin(name, src, out, proto_message, proto_deps):
         name = name,
         srcs = [src],
         outs = [out],
-        cmd = ("$(locations :Convert)" +
+        cmd = ("$(locations :" + name + "_Convert)" +
                " $(location " + src + ") > $@"),
-        exec_tools = [":Convert"],
+        exec_tools = [":%s_Convert" % name],
     )

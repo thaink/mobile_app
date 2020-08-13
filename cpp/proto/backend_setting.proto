@@ -1,0 +1,59 @@
+/* Copyright 2019 The MLPerf Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+syntax = "proto2";
+
+package mlperf.mobile;
+
+option cc_enable_arenas = true;
+option java_multiple_files = true;
+option java_package = "org.mlperf.proto";
+
+// Config of a backend.
+//
+// Next ID: 3
+message BackendSetting {
+  // Common setting for all benchmark.
+  repeated Setting common_setting = 1;
+  // Setting that specialized for each benchmark.
+  repeated BenchmarkSetting benchmark_setting = 2;
+}
+
+// Config of a benchmark.
+//
+// Next ID: 3
+message BenchmarkSetting {
+  // Id of the benchmark. Must match the id in ModelConfig::id.
+  required string benchmark_id = 1;
+  // Models to run in this task.
+  repeated Setting setting = 2;
+}
+
+// A setting of each benchmark.
+//
+// Next ID: 5
+message Setting {
+  // Id of this setting.
+  required string id = 1;
+  // Name of this setting.
+  required string name = 2;
+  // Current value of this setting.
+  required string value = 3;
+  // Acceptable value set of this setting.
+  message Value {
+    required string value = 1;
+    required string name = 2;
+  }
+  repeated Value acceptable_value = 4;
+}

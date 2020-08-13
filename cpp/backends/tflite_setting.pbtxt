@@ -1,0 +1,159 @@
+common_setting {
+  id: "num_threads"
+  name: "Number of threads"
+  value: "4"
+  acceptable_value { value: "1" name: "Single thread" }
+  acceptable_value { value: "2" name: "2 threads" }
+  acceptable_value { value: "4" name: "4 threads" }
+  acceptable_value { value: "8" name: "8 threads" }
+  acceptable_value { value: "16" name: "16 threads" }
+}
+
+benchmark_setting {
+  benchmark_id: "IC_tpu_uint8"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+benchmark_setting {
+  benchmark_id: "IC_tpu_float32"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "gpu" name: "GPU" }
+    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "IC_tpu_uint8_offline"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+
+}
+
+benchmark_setting {
+  benchmark_id: "IC_tpu_float32_offline"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "gpu" name: "GPU" }
+    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "OD_uint8"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "OD_float32"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "gpu" name: "GPU" }
+    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "LU_float32"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "LU_gpu_float32"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "gpu_f16"
+    acceptable_value { value: "gpu" name: "GPU" }
+    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "LU_int8"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "LU_nnapi_int8"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "nnapi"
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "IS_float32"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "gpu" name: "GPU" }
+    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "IS_uint8"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}
+
+benchmark_setting {
+  benchmark_id: "IS_int8"
+  setting {
+    id: "accelerator"
+    name: "Hardware Accelerator"
+    value: "none"
+    acceptable_value { value: "none" name: "CPU" }
+    acceptable_value { value: "nnapi" name: "NNAPI" }
+  }
+}

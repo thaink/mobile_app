@@ -27,28 +27,43 @@ java_lite_proto_library(
 )
 
 text_to_bin(
-    name = "tasks.pb",
+    name = "tasks_pb",
     src = "assets/tasks.pbtxt",
     out = "res/raw/tasks_pb",
     proto_deps = ["//cpp/proto:mlperf_task_java_proto"],
     proto_message = "org.mlperf.proto.MLPerfConfig",
 )
 
+text_to_bin(
+    name = "tflite_setting_pb",
+    src = "//cpp/backends:tflite_setting.pbtxt",
+    out = "res/raw/tflite_setting_pb",
+    proto_deps = ["//cpp/proto:mlperf_task_java_proto"],
+    proto_message = "org.mlperf.proto.BackendSetting",
+)
+
 android_library(
     name = "evaluation_app_lib",
     srcs = [
+        "App.java",
+        "BackendInterface.java",
+        "Benchmark.java",
+        "MLPerfDriverWrapper.java",
         "MLPerfEvaluation.java",
         "MLPerfTasks.java",
-        "ModelsPreference.java",
+        "NativeEvaluation.java",
         "ResultHolder.java",
         "ResultsAdapter.java",
         "RunMLPerfWorker.java",
         "SettingsActivity.java",
     ],
     manifest = "AndroidManifest.xml",
-    resource_files = [":tasks.pb"] + glob(["res/**"]),
+    resource_files = [
+        ":tasks_pb",
+        ":tflite_setting_pb",
+    ] + glob(["res/**"]),
     deps = [
-        ":jni_wrapper",
+        ":evaluation_native",
         ":mlperf_task_java_proto_lite",
         "//third_party:androidx_annotation",
         "//third_party:androidx_appcompat",
@@ -87,19 +102,6 @@ filegroup(
             "**/OWNERS",
         ],
     ),
-)
-
-android_library(
-    name = "jni_wrapper",
-    srcs = [
-        "MLPerfDriverWrapper.java",
-        "NativeEvaluation.java",
-    ],
-    manifest = "AndroidManifest.xml",
-    deps = [
-        ":evaluation_native",
-        ":mlperf_task_java_proto_lite",
-    ],
 )
 
 cc_library(

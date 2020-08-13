@@ -17,6 +17,7 @@ limitations under the License.
 
 #include <vector>
 
+#include "cpp/proto/backend_setting.pb.h"
 #include "cpp/utils.h"
 #include "loadgen/system_under_test.h"
 
@@ -54,6 +55,15 @@ class Backend {
 
   // Returns the output format produced by the model.
   virtual const DataFormat& GetOutputFormat() = 0;
+
+  // Return the setting of this backend.
+  const BackendSetting& GetSettings() { return settings_; }
+
+  // Set the setting of this backend.
+  void SetSettings(const BackendSetting& settings) { settings_ = settings; }
+
+ private:
+  BackendSetting settings_;
 };
 
 }  // namespace mobile

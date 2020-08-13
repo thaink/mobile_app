@@ -38,6 +38,7 @@ cc_library(
     copts = tflite_copts(),
     deps = [
         ":utils",
+        "//cpp/proto:mlperf_task_cc_proto",
         "@org_mlperf_inference//:loadgen",
     ],
 )

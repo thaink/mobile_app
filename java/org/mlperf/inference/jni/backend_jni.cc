@@ -64,35 +64,36 @@ Java_org_mlperf_inference_MLPerfDriverWrapper_nativeDeleteBackend(
   }
 }
 
-JNIEXPORT jobject JNICALL
-Java_org_mlperf_inference_MLPerfDriverWrapper_listDevicesForNNAPI(
-    JNIEnv* env, jclass clazz) {
-  jclass java_util_ArrayList = env->FindClass("java/util/ArrayList");
-  jmethodID java_util_ArrayList_init =
-      env->GetMethodID(java_util_ArrayList, "<init>", "(I)V");
-  jmethodID java_util_ArrayList_add =
-      env->GetMethodID(java_util_ArrayList, "add", "(Ljava/lang/Object;)Z");
-  const NnApi* nnapi = NnApiImplementation();
+// Get setting as serialized string.
+JNIEXPORT jbyteArray JNICALL
+Java_org_mlperf_inference_MLPerfDriverWrapper_getBackendSettings(
+    JNIEnv* env, jclass clazz, jlong backend_handle) {
+  std::string settings;
+  reinterpret_cast<mlperf::mobile::Backend*>(backend_handle)
+      ->GetSettings()
+      .SerializeToString(&settings);
 
-  if (nnapi->ANeuralNetworks_getDeviceCount != nullptr) {
-    uint32_t num_devices = 0;
-    NnApiImplementation()->ANeuralNetworks_getDeviceCount(&num_devices);
+  // Copy to jbyteArray.
+  jbyteArray array = env->NewByteArray(settings.size());
+  env->SetByteArrayRegion(array, 0, settings.size(),
+                          reinterpret_cast<const jbyte*>(settings.c_str()));
+  return array;
+}
 
-    jobject results = env->NewObject(java_util_ArrayList,
-                                     java_util_ArrayList_init, num_devices);
+// Get setting as serialized string.
+JNIEXPORT void JNICALL
+Java_org_mlperf_inference_MLPerfDriverWrapper_setBackendSettings(
+    JNIEnv* env, jclass clazz, jlong backend_handle, jbyteArray jsettings) {
+  int len = env->GetArrayLength(jsettings);
+  char* buf = new char[len];
+  env->GetByteArrayRegion(jsettings, 0, len, reinterpret_cast<jbyte*>(buf));
+  std::string settings_str(buf, len);
+  delete[] buf;
 
-    for (uint32_t i = 0; i < num_devices; i++) {
-      ANeuralNetworksDevice* device = nullptr;
-      const char* buffer = nullptr;
-      nnapi->ANeuralNetworks_getDevice(i, &device);
-      nnapi->ANeuralNetworksDevice_getName(device, &buffer);
-      jstring device_name = env->NewStringUTF(buffer);
-      env->CallBooleanMethod(results, java_util_ArrayList_add, device_name);
-      env->DeleteLocalRef(device_name);
-    }
-    return results;
-  }
-  return env->NewObject(java_util_ArrayList, java_util_ArrayList_init, 0);
+  mlperf::mobile::BackendSetting settings;
+  settings.ParseFromString(settings_str);
+  reinterpret_cast<mlperf::mobile::Backend*>(backend_handle)
+      ->SetSettings(settings);
 }
 
 #ifdef __cplusplus

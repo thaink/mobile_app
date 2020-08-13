@@ -14,14 +14,14 @@ limitations under the License.
 ==============================================================================*/
 package org.mlperf.inference;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
-import androidx.preference.PreferenceManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import org.mlperf.proto.MLPerfConfig;
+import org.mlperf.proto.ModelConfig;
+import org.mlperf.proto.TaskConfig;
 
 /** This class reads the tasks.pbtxt and provides quick inference to its values. */
 final class MLPerfTasks {
@@ -29,37 +29,48 @@ final class MLPerfTasks {
   private static final String ZIP = ".zip";
   private static MLPerfConfig mlperfTasks;
   private static String localDir;
+  // Map a benchmark id to its TaskConfig.
+  private static HashMap<String, TaskConfig> taskConfigMap;
+  // Map a benchmark id to its ModelConfig.
+  private static HashMap<String, ModelConfig> modelConfigMap;
 
   // Make this class not instantiable.
   private MLPerfTasks() {}
 
-  public static MLPerfConfig getConfig(Context context) {
+  public static MLPerfConfig getConfig() {
     if (mlperfTasks == null) {
-      localDir = context.getExternalFilesDir("cache").getAbsolutePath();
-      SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-      String customConfig =
-          sharedPref.getString(context.getString(R.string.custom_config_key), null);
-      if (customConfig == null || !loadCustomConfig(customConfig)) {
-        try {
-          InputStream inputStream = context.getResources().openRawResource(R.raw.tasks_pb);
-          mlperfTasks = MLPerfConfig.parseFrom(inputStream);
-          inputStream.close();
-        } catch (IOException e) {
-          Log.e(TAG, "Unable to read config proto file");
+      localDir = App.getContext().getExternalFilesDir("cache").getAbsolutePath();
+      try {
+        InputStream inputStream = App.getContext().getResources().openRawResource(R.raw.tasks_pb);
+        mlperfTasks = MLPerfConfig.parseFrom(inputStream);
+        taskConfigMap = new HashMap<>();
+        modelConfigMap = new HashMap<>();
+        for (TaskConfig task : mlperfTasks.getTaskList()) {
+          for (ModelConfig model : task.getModelList()) {
+            taskConfigMap.put(model.getId(), task);
+            modelConfigMap.put(model.getId(), model);
+          }
         }
+        inputStream.close();
+      } catch (IOException e) {
+        Log.e(TAG, "Unable to read config proto file");
       }
     }
     return mlperfTasks;
   }
 
-  public static boolean loadCustomConfig(String text) {
-    try {
-      mlperfTasks = MLPerfConfig.parseFrom(MLPerfDriverWrapper.convertProto(text));
-    } catch (Exception e) {
-      Log.e(TAG, "Failed to read text config file: " + e.getMessage());
-      return false;
+  public static TaskConfig getTaskConfig(String benchmarkId) {
+    if (taskConfigMap == null) {
+      getConfig();
     }
-    return true;
+    return taskConfigMap.get(benchmarkId);
+  }
+
+  public static ModelConfig getModelConfig(String benchmarkId) {
+    if (modelConfigMap == null) {
+      getConfig();
+    }
+    return modelConfigMap.get(benchmarkId);
   }
 
   public static boolean isZipFile(String path) {

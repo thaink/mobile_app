@@ -15,7 +15,6 @@ limitations under the License.
 
 package org.mlperf.inference;
 
-import java.util.ArrayList;
 import org.mlperf.proto.DatasetConfig;
 
 /** A class that wraps functionality around tflite::mlperf::MlperfDriver. */
@@ -60,12 +59,11 @@ public final class MLPerfDriverWrapper implements AutoCloseable {
     nativeDelete(driverHandle);
   }
 
-  // List devices available for NNAPI. This only works on API >= 29, otherwise it returns an
-  // empty list.
-  public static native ArrayList<String> listDevicesForNNAPI();
+  // Get settings of a backend.
+  private static native byte[] getBackendSettings(long backendHandle);
 
-  // Convert text proto file to binary proto.
-  public static native byte[] convertProto(String text);
+  // Set settings of a backend.
+  private static native void setBackendSettings(long backendHandle, byte[] settings);
 
   // Native functions.
   private native long nativeInit(long datasetHandle, long backendHandle);

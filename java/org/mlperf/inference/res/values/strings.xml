@@ -11,47 +11,11 @@
   <string name="action_refresh" description="Action: Refresh [CHAR_LIMIT=50]">Refresh</string>
 
   <!-- Strings related to Settings -->
-  <string name="pref_delegate_setting" description="Delegates Setting [CHAR_LIMIT=50]">
-    Accelerators
-  </string>
-  <string name="pref_delegate_key" description="Delegates Pref Key [CHAR_LIMIT=50]">
-    delegate_preference_v2
-  </string>
-  <string name="pref_delegate_sum" description="Delegates Pref Summary [CHAR_LIMIT=50]">
-    Accelerators for TFLite
-  </string>
-  <string name="num_threads_settings" description="Number of threads setting [CHAR_LIMIT=50]">
-    Number of Threads
-  </string>
-  <string name="num_threads_key" description="Number of threads Pref Key [CHAR_LIMIT=50]">
-    num_threads
-  </string>
-  <string name="num_threads_default" description="Default number of threads [CHAR_LIMIT=50]">
-    4
-  </string>
   <string name="pref_loginfo_setting" description="Log Area Setting [CHAR_LIMIT=50]">
     Logging Info
   </string>
   <string name="pref_loginfo_key" description="Log Area Pref Key [CHAR_LIMIT=50]">
     loginfo_preference
-  </string>
-  <string name="preferences_models" description="Models Setting [CHAR_LIMIT=50]">
-    Models Preference
-  </string>
-  <string name="models_preference_sum" description="Models Setting Summary [CHAR_LIMIT=50]">
-    Only run selected models
-  </string>
-  <string name="models_preference_key" description="Selecting Models Pref Key [CHAR_LIMIT=50]">
-    selected_models_v2
-  </string>
-  <string name="custom_config_key" description="Selecting custom config Key [CHAR_LIMIT=50]">
-    custom_config
-  </string>
-  <string name="config_summary_key" description="Selecting custom config summary key [CHAR_LIMIT=50]">
-    config_summary
-  </string>
-  <string name="custom_config_summary" description="Selecting custom config summary [CHAR_LIMIT=50]">
-    Using the default configuration
   </string>
   <string name="backend_preference" description="Inference backend [CHAR_LIMIT=50]">
     Inference backend
@@ -65,12 +29,6 @@
   <string name="dummy_backend_preference_key" description="Dummy backend setting group key [CHAR_LIMIT=50]">
     dummy_backend
   </string>
-
-  <!-- Values for delegate setting -->
-  <string name="delegate_none" description="CPU [CHAR_LIMIT=50]">None</string>
-  <string name="delegate_gpu" description="GPU [CHAR_LIMIT=50]">GPU (F32)</string>
-  <string name="delegate_gpu_f16" description="GPU F16 [CHAR_LIMIT=50]">GPU (F16)</string>
-  <string name="delegate_nnapi" description="NNAPI [CHAR_LIMIT=50]">NNAPI</string>
 
   <!-- Values for log info setting -->
   <string name="log_none" description="Show no log [CHAR_LIMIT=50]">None</string>

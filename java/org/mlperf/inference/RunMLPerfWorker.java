@@ -14,7 +14,6 @@ limitations under the License.
 ==============================================================================*/
 package org.mlperf.inference;
 
-import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -45,12 +44,10 @@ public final class RunMLPerfWorker implements Handler.Callback {
 
   private final IdentityHashMap<Message, String> waitingMessages;
   private final Handler handler;
-  private final Context context;
 
-  public RunMLPerfWorker(@NonNull Context context, @NonNull Looper looper) {
+  public RunMLPerfWorker(@NonNull Looper looper) {
     waitingMessages = new IdentityHashMap<>();
     handler = new Handler(looper, this);
-    this.context = context;
   }
 
   @Override
@@ -59,30 +56,30 @@ public final class RunMLPerfWorker implements Handler.Callback {
     // Gets the data.
     WorkerData data = (WorkerData) msg.obj;
     Messenger messenger = msg.replyTo;
-    Log.d(TAG, "handleMessage() " + data);
-    if (data.taskIdx < 0 || data.modelIdx < 0 || data.numThreads < 0) {
-      replyWithUpdateMessage(messenger, "Received malformed data.", REPLY_UPDATE);
-      return false;
-    }
+    Log.d(TAG, "handleMessage() " + data.benchmarkId);
+
     // Runs the model.
     String mode = "SubmissionRun";
-    TaskConfig taskConfig = MLPerfTasks.getConfig(context).getTask(data.taskIdx);
-    ModelConfig modelConfig = taskConfig.getModel(data.modelIdx);
+    TaskConfig taskConfig = MLPerfTasks.getTaskConfig(data.benchmarkId);
+    ModelConfig modelConfig = MLPerfTasks.getModelConfig(data.benchmarkId);
     DatasetConfig dataset = taskConfig.getDataset();
     boolean useDummyDataSet =
         !dataset.getPath().contains("@assets/")
             && !new File(MLPerfTasks.getLocalPath(dataset.getPath())).isDirectory();
     String modelName = modelConfig.getName();
-    String runtime = computeRuntimeString(data.numThreads, data.delegate);
     replyWithUpdateMessage(
         messenger, "Running inference for \"" + modelName + "\"...", REPLY_UPDATE);
     replyWithUpdateMessage(messenger, " - backend: " + data.backend, REPLY_UPDATE);
-    replyWithUpdateMessage(messenger, " - runtime: " + runtime, REPLY_UPDATE);
     try {
       MLPerfDriverWrapper.Builder builder = new MLPerfDriverWrapper.Builder();
+      BackendInterface backendInterface = new BackendInterface(data.backend);
       if (data.backend.equals("tflite")) {
+        int numThreads =
+            Integer.parseInt(backendInterface.getCommonSetting("num_threads").getValue());
+        String accelerator =
+            backendInterface.getBenchmarkSetting(modelConfig.getId(), "accelerator").getValue();
         builder.useTfliteBackend(
-            MLPerfTasks.getLocalPath(modelConfig.getSrc()), data.numThreads, data.delegate);
+            MLPerfTasks.getLocalPath(modelConfig.getSrc()), numThreads, accelerator);
       } else if (data.backend.equals("dummy_backend")) {
         builder.useDummyBackend(MLPerfTasks.getLocalPath(modelConfig.getSrc()));
       } else {
@@ -138,7 +135,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
           data.outputFolder);
       replyWithUpdateMessage(messenger, "Finished running \"" + modelName + "\".", REPLY_UPDATE);
       replyWithCompleteMessage(
-          messenger, modelName, runtime, driverWrapper.getLatency(), driverWrapper.getAccuracy());
+          messenger, modelName, driverWrapper.getLatency(), driverWrapper.getAccuracy());
     } catch (Exception e) {
       replyWithUpdateMessage(
           messenger,
@@ -152,8 +149,7 @@ public final class RunMLPerfWorker implements Handler.Callback {
   // Same as Handler.sendMessage but keeping track of the message pool.
   public boolean sendMessage(Message msg) {
     WorkerData data = (WorkerData) msg.obj;
-    String modelName =
-        MLPerfTasks.getConfig(context).getTask(data.taskIdx).getModel(data.modelIdx).getName();
+    String modelName = MLPerfTasks.getModelConfig(data.benchmarkId).getName();
     waitingMessages.put(msg, modelName);
     return handler.sendMessage(msg);
   }
@@ -190,11 +186,10 @@ public final class RunMLPerfWorker implements Handler.Callback {
   }
 
   private static void replyWithCompleteMessage(
-      Messenger messenger, String model, String runtime, String latency, String accuracy) {
+      Messenger messenger, String model, String latency, String accuracy) {
     Message reply = Message.obtain();
     reply.what = REPLY_COMPLETE;
     ResultHolder result = new ResultHolder(model);
-    result.setRuntime(runtime);
     result.setInferenceLatency(latency);
     result.setAccuracy(accuracy);
     reply.obj = result;
@@ -205,43 +200,16 @@ public final class RunMLPerfWorker implements Handler.Callback {
     }
   }
 
-  private static String computeRuntimeString(int numThreads, String delegate) {
-    StringBuilder runtimeStr = new StringBuilder();
-    if ("none".equalsIgnoreCase(delegate)) {
-      runtimeStr.append("CPU, ");
-      runtimeStr.append(numThreads);
-      runtimeStr.append(" thread");
-      if (numThreads > 1) {
-        runtimeStr.append("s");
-      }
-    } else {
-      runtimeStr.append(delegate);
-    }
-    return runtimeStr.toString();
-  }
-
   /** Defines data for this worker. */
   public static class WorkerData {
-    public WorkerData(
-        int taskId,
-        int modelIdx,
-        String backend,
-        int numThreads,
-        String delegate,
-        String outputFolder) {
-      this.taskIdx = taskId;
-      this.modelIdx = modelIdx;
+    public WorkerData(String backend, String benchmarkId, String outputFolder) {
       this.backend = backend;
-      this.numThreads = numThreads;
-      this.delegate = delegate;
+      this.benchmarkId = benchmarkId;
       this.outputFolder = outputFolder;
     }
 
-    protected int taskIdx;
-    protected int modelIdx;
-    protected int numThreads;
     protected String backend;
-    protected String delegate;
+    protected String benchmarkId;
     protected String outputFolder;
   }
 }

@@ -26,7 +26,6 @@ cc_library(
         "backend_jni.cc",
         "dataset_jni.cc",
         "mlperf_driver_jni.cc",
-        "read_config.cc",
     ],
     copts = tflite_copts(),
     linkopts = [

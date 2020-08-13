@@ -19,6 +19,10 @@ package(
     licenses = ["notice"],  # Apache 2.0
 )
 
+exports_files([
+    "tflite_setting.pbtxt",
+])
+
 cc_library(
     name = "tflite",
     srcs = ["tflite.cc"],
@@ -30,6 +34,7 @@ cc_library(
         "//cpp:mlperf_driver",
         "//cpp:utils",
         "@com_google_absl//absl/strings",
+        "@com_google_protobuf//:protobuf",
         "@org_tensorflow//tensorflow/lite/kernels:kernel_util",
         "@org_tensorflow//tensorflow/lite/tools/evaluation/proto:evaluation_stages_cc_proto",
         "@org_tensorflow//tensorflow/lite/tools/evaluation/stages:tflite_inference_stage",

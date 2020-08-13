@@ -47,7 +47,7 @@ message TaskConfig {
 
 // Config of the dataset.
 //
-// Next ID: 7
+// Next ID: 5
 message DatasetConfig {
   // Name of the dataset.
   required string name = 1;
@@ -72,7 +72,7 @@ message DatasetConfig {
 
 // Config of a model.
 //
-// Next ID: 6
+// Next ID: 8
 message ModelConfig {
   // Name of the model.
   required string name = 1;
@@ -88,4 +88,8 @@ message ModelConfig {
   optional string tags = 4;
   // Custom scenario string to configure custom LoadGen parameter in mlperf_driver.cc .
   optional string scenario = 5;
+  // unique id of the model. Format: TaskID_ModelID;
+  required string id = 6;
+  // score max of this benchmark.
+  optional float score_max = 7;
 }

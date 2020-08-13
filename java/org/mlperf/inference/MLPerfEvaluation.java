@@ -27,7 +27,6 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Message;
 import android.os.Messenger;
 import android.text.SpannableString;
@@ -59,10 +58,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.mlperf.proto.DatasetConfig;
@@ -85,18 +81,15 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   private final HashMap<String, Integer> resultMap = new HashMap<>();
 
   private String backend;
-  private Set<String> delegates;
-  private int numThreadsPreference;
   private int highLightColor;
   private int backgroundColor;
 
   private MLPerfConfig mlperfTasks;
-  private HandlerThread workerThread;
-  private RunMLPerfWorker workerHandler;
   private Messenger replyMessenger;
 
   private boolean modelIsAvailable = false;
   private SharedPreferences sharedPref;
+  private BackendInterface backendInterface;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -136,22 +129,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   @Override
   public void onResume() {
     super.onResume();
-    // Reads tasks from proto file.
-    mlperfTasks = MLPerfTasks.getConfig(getApplicationContext());
-
-    // Runs all models by default after installing.
+    mlperfTasks = MLPerfTasks.getConfig();
     sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-    if (sharedPref.getStringSet(getString(R.string.models_preference_key), null) == null) {
-      SharedPreferences.Editor preferencesEditor = sharedPref.edit();
-      Set<String> allModels = new HashSet<>();
-      for (TaskConfig task : mlperfTasks.getTaskList()) {
-        for (ModelConfig model : task.getModelList()) {
-          allModels.add(model.getName());
-        }
-      }
-      preferencesEditor.putStringSet(getString(R.string.models_preference_key), allModels);
-      preferencesEditor.commit();
-    }
 
     // Checks if models are available.
     checkModelIsAvailable();
@@ -160,13 +139,6 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     backend =
         sharedPref.getString(
             getString(R.string.backend_preference_key), getString(R.string.tflite_preference_key));
-    delegates =
-        sharedPref.getStringSet(
-            getString(R.string.pref_delegate_key), new HashSet<String>(Arrays.asList("None")));
-    numThreadsPreference =
-        Integer.parseInt(
-            sharedPref.getString(
-                getString(R.string.num_threads_key), getString(R.string.num_threads_default)));
     String logInfoPreference =
         sharedPref.getString(getString(R.string.pref_loginfo_key), getString(R.string.log_short));
     if (logInfoPreference.equals(getString(R.string.log_short))) {
@@ -185,6 +157,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
       taskResultText.setVisibility(View.GONE);
       Log.e(TAG, "Unknown LogInfo perference value: " + logInfoPreference);
     }
+
+    backendInterface = new BackendInterface(backend);
   }
 
   @Override
@@ -230,46 +204,15 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   }
 
   private void playButtonListener(View v) {
-    Set<String> selectedModels =
-        sharedPref.getStringSet(getString(R.string.models_preference_key), null);
-    if (selectedModels.isEmpty()) {
-      logProgress("No models selected. Please select models in settings.");
-      return;
-    }
     if (checkModelIsAvailable()) {
-      if (workerThread == null) {
-        workerThread = new HandlerThread("MLPerf.Worker");
-        workerThread.start();
-        workerHandler = new RunMLPerfWorker(this, workerThread.getLooper());
-      }
-      for (int taskIdx = 0; taskIdx < mlperfTasks.getTaskCount(); ++taskIdx) {
-        TaskConfig task = mlperfTasks.getTask(taskIdx);
-        for (int modelIdx = 0; modelIdx < task.getModelCount(); ++modelIdx) {
-          if (selectedModels.contains(task.getModel(modelIdx).getName())) {
-            if (backend.equals("tflite")) {
-              for (String delegate : delegates) {
-                scheduleInference(taskIdx, modelIdx, delegate);
-              }
-            } else if (backend.equals("dummy_backend")) {
-              scheduleInference(taskIdx, modelIdx, "");
-            } else {
-              logProgress("Backend " + backend + "is not supported.");
-            }
-          }
-        }
-      }
+      backendInterface.runBenchmarks();
     } else {
       logProgress("Models are not available.");
     }
   }
 
   private void stopButtonListener(View v) {
-    // Loadgen does not provide any method to stop the current task so the it will get finished.
-    if (workerThread != null) {
-      workerHandler.removeMessages();
-      workerThread.quit();
-      workerThread = null;
-    }
+    backendInterface.abortBenchmarks();
   }
 
   private void refreshButtonListener(View v) {
@@ -320,23 +263,6 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         int toY) {
       return animateBackground(newHolder);
     }
-  }
-
-  // Schedule a inference task with WorkManager for the given model.
-  private void scheduleInference(int taskIdx, int modelIdx, String delegate) {
-    Log.d(TAG, "scheduleInference " + taskIdx + " , " + modelIdx);
-    TaskConfig task = mlperfTasks.getTask(taskIdx);
-    final String modelName = task.getModel(modelIdx).getName();
-    String outputLogDir = getExternalFilesDir("mlperf/" + modelName).getAbsolutePath();
-    Log.i(TAG, "The mlperf log dir for \"" + modelName + "\" is " + outputLogDir + "/");
-    RunMLPerfWorker.WorkerData data =
-        new RunMLPerfWorker.WorkerData(
-            taskIdx, modelIdx, backend, numThreadsPreference, delegate, outputLogDir);
-    Message msg = workerHandler.obtainMessage(RunMLPerfWorker.MSG_RUN, data);
-    msg.replyTo = replyMessenger;
-    workerHandler.sendMessage(msg);
-    progressCount.increaseTotal();
-    logProgress("Worker for \"" + modelName + "\" with delegate: " + delegate + " scheduled.");
   }
 
   private static class ProgressCount {
@@ -415,15 +341,6 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
 
   public Context getActivityContext() {
     return this;
-  }
-
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    if (workerThread != null) {
-      workerThread.quit();
-    }
-    Log.d(TAG, "onDestroy() is called.");
   }
 
   private boolean checkModelIsAvailable() {
