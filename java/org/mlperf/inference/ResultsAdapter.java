@@ -43,9 +43,9 @@ public class ResultsAdapter extends RecyclerView.Adapter<ResultsAdapter.ViewHold
   // binds the data to the TextView in each row
   @Override
   public void onBindViewHolder(ViewHolder holder, int position) {
-    String modelStr = data.get(position).getModel();
+    String modelStr = MLPerfTasks.getModelConfig(data.get(position).getId()).getName();
     String runtimeStr = data.get(position).getRuntime();
-    String infTimeStr = data.get(position).getInferenceLatency();
+    String infTimeStr = data.get(position).getScore();
     String accStr = data.get(position).getAccuracy();
 
     holder.modelTextView.setText(modelStr);

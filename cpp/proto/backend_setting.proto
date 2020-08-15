@@ -24,9 +24,9 @@ option java_package = "org.mlperf.proto";
 //
 // Next ID: 3
 message BackendSetting {
-  // Common setting for all benchmark.
+  // Common setting for all benchmarks.
   repeated Setting common_setting = 1;
-  // Setting that specialized for each benchmark.
+  // Setting that is specialized for each benchmark.
   repeated BenchmarkSetting benchmark_setting = 2;
 }
 
@@ -44,16 +44,16 @@ message BenchmarkSetting {
 //
 // Next ID: 5
 message Setting {
+  message Value {
+    required string value = 1;
+    required string name = 2;
+  }
   // Id of this setting.
   required string id = 1;
   // Name of this setting.
   required string name = 2;
   // Current value of this setting.
-  required string value = 3;
+  required Value value = 3;
   // Acceptable value set of this setting.
-  message Value {
-    required string value = 1;
-    required string name = 2;
-  }
   repeated Value acceptable_value = 4;
 }

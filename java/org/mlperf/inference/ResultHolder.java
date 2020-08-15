@@ -14,55 +14,52 @@ limitations under the License.
 ==============================================================================*/
 package org.mlperf.inference;
 
-/** Object to hold result parameters for each model */
+/** Object to hold result parameters for each bechmark */
 // TODO : This class would be a good candidate for AutoValue: go/autovalue/builders.
 public class ResultHolder {
-  private String model;
+  private String benchmarkId;
   private String runtime;
-  private String inferenceLatency;
-  private String accuracy;
+  private String benchmarkScore;
+  private String benchmarkAccuracy;
 
-  public ResultHolder(String model) {
-    this.model = model;
-    this.inferenceLatency = "0";
-    this.accuracy = "0";
-  }
-
-  public void setModel(String model) {
-    this.model = model;
+  public ResultHolder(String id) {
+    benchmarkId = id;
+    runtime = "";
+    benchmarkScore = "0";
+    benchmarkAccuracy = "0";
   }
 
   public void setRuntime(String runtime) {
     this.runtime = runtime;
   }
 
-  public void setInferenceLatency(String latency) {
-    this.inferenceLatency = latency;
+  public void setScore(String latency) {
+    this.benchmarkScore = latency;
   }
 
   public void setAccuracy(String accuracy) {
-    this.accuracy = accuracy;
+    this.benchmarkAccuracy = accuracy;
   }
 
-  public String getModel() {
-    return model;
+  public String getId() {
+    return benchmarkId;
   }
 
   public String getRuntime() {
     return runtime;
   }
 
-  public String getInferenceLatency() {
-    return inferenceLatency;
+  public String getScore() {
+    return benchmarkScore;
   }
 
   public String getAccuracy() {
-    return accuracy;
+    return benchmarkAccuracy;
   }
 
   public void reset() {
     runtime = "";
-    inferenceLatency = "0";
-    accuracy = "0";
+    benchmarkScore = "0";
+    benchmarkAccuracy = "0";
   }
 }

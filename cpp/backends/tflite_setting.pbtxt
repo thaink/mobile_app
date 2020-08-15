@@ -1,12 +1,30 @@
 common_setting {
   id: "num_threads"
   name: "Number of threads"
-  value: "4"
-  acceptable_value { value: "1" name: "Single thread" }
-  acceptable_value { value: "2" name: "2 threads" }
-  acceptable_value { value: "4" name: "4 threads" }
-  acceptable_value { value: "8" name: "8 threads" }
-  acceptable_value { value: "16" name: "16 threads" }
+  value {
+    value: "4"
+    name: "4 threads"
+  }
+  acceptable_value {
+    value: "1"
+    name: "Single thread"
+  }
+  acceptable_value {
+    value: "2"
+    name: "2 threads"
+  }
+  acceptable_value {
+    value: "4"
+    name: "4 threads"
+  }
+  acceptable_value {
+    value: "8"
+    name: "8 threads"
+  }
+  acceptable_value {
+    value: "16"
+    name: "16 threads"
+  }
 }
 
 benchmark_setting {
@@ -14,9 +32,18 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 benchmark_setting {
@@ -24,11 +51,26 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "gpu" name: "GPU" }
-    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "gpu"
+      name: "GPU"
+    }
+    acceptable_value {
+      value: "gpu_f16"
+      name: "GPU(Float 16)"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 
@@ -37,9 +79,18 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 
 }
@@ -49,11 +100,26 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "gpu" name: "GPU" }
-    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "gpu"
+      name: "GPU"
+    }
+    acceptable_value {
+      value: "gpu_f16"
+      name: "GPU(Float 16)"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 
@@ -62,9 +128,18 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 
@@ -73,11 +148,26 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "gpu" name: "GPU" }
-    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "gpu"
+      name: "GPU"
+    }
+    acceptable_value {
+      value: "gpu_f16"
+      name: "GPU(Float 16)"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 
@@ -86,9 +176,18 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 
@@ -97,9 +196,18 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "gpu_f16"
-    acceptable_value { value: "gpu" name: "GPU" }
-    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
+    value {
+      value: "gpu_f16"
+      name: "GPU(Float 16)"
+    }
+    acceptable_value {
+      value: "gpu"
+      name: "GPU"
+    }
+    acceptable_value {
+      value: "gpu_f16"
+      name: "GPU(Float 16)"
+    }
   }
 }
 
@@ -108,8 +216,14 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
   }
 }
 
@@ -118,8 +232,18 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "nnapi"
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 
@@ -128,11 +252,26 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "gpu" name: "GPU" }
-    acceptable_value { value: "gpu_f16" name: "GPU(Float 16)" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "gpu"
+      name: "GPU"
+    }
+    acceptable_value {
+      value: "gpu_f16"
+      name: "GPU(Float 16)"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 
@@ -141,9 +280,18 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }
 
@@ -152,8 +300,17 @@ benchmark_setting {
   setting {
     id: "accelerator"
     name: "Hardware Accelerator"
-    value: "none"
-    acceptable_value { value: "none" name: "CPU" }
-    acceptable_value { value: "nnapi" name: "NNAPI" }
+    value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "none"
+      name: "CPU"
+    }
+    acceptable_value {
+      value: "nnapi"
+      name: "NNAPI"
+    }
   }
 }

@@ -11,12 +11,6 @@
   <string name="action_refresh" description="Action: Refresh [CHAR_LIMIT=50]">Refresh</string>
 
   <!-- Strings related to Settings -->
-  <string name="pref_loginfo_setting" description="Log Area Setting [CHAR_LIMIT=50]">
-    Logging Info
-  </string>
-  <string name="pref_loginfo_key" description="Log Area Pref Key [CHAR_LIMIT=50]">
-    loginfo_preference
-  </string>
   <string name="backend_preference" description="Inference backend [CHAR_LIMIT=50]">
     Inference backend
   </string>
@@ -29,9 +23,4 @@
   <string name="dummy_backend_preference_key" description="Dummy backend setting group key [CHAR_LIMIT=50]">
     dummy_backend
   </string>
-
-  <!-- Values for log info setting -->
-  <string name="log_none" description="Show no log [CHAR_LIMIT=50]">None</string>
-  <string name="log_short" description="Show short log [CHAR_LIMIT=50]">Short</string>
-  <string name="log_full" description="Show full log [CHAR_LIMIT=50]">Full</string>
 </resources>

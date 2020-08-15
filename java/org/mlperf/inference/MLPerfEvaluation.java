@@ -21,25 +21,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Messenger;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.method.ScrollingMovementMethod;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -67,16 +59,17 @@ import org.mlperf.proto.ModelConfig;
 import org.mlperf.proto.TaskConfig;
 
 /** {@link MLPerfEvaluation} evaluates models on MLPerf benchmark. */
-public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callback {
+public class MLPerfEvaluation extends AppCompatActivity
+    implements Handler.Callback, MiddleInterface.Callback {
 
   private static final String TAG = "MLPerfEvaluation";
   private static final String ASSETS_PREFIX = "@assets/";
+  private static final int MSG_PROGRESS = 1;
+  private static final int MSG_COMPLETE = 2;
 
-  private ProgressCount progressCount;
-  private TextView taskResultText;
-  private View dividerBar;
   private RecyclerView resultRecyclerView;
   private ResultsAdapter resultAdapter;
+  private ProgressBar progressBar;
   private final ArrayList<ResultHolder> results = new ArrayList<>();
   private final HashMap<String, Integer> resultMap = new HashMap<>();
 
@@ -85,11 +78,11 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
   private int backgroundColor;
 
   private MLPerfConfig mlperfTasks;
-  private Messenger replyMessenger;
+  private Handler handler;
 
   private boolean modelIsAvailable = false;
   private SharedPreferences sharedPref;
-  private BackendInterface backendInterface;
+  private MiddleInterface middleInterface;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -105,11 +98,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     highLightColor = ContextCompat.getColor(this, R.color.mlperfBlue);
     backgroundColor = ContextCompat.getColor(this, R.color.background);
 
-    // Sets up progress bar and log area.
-    ProgressBar progressBar = findViewById(R.id.progressBar);
-    taskResultText = findViewById(R.id.taskResultText);
-    taskResultText.setMovementMethod(new ScrollingMovementMethod());
-    dividerBar = findViewById(R.id.divider);
+    // Sets up progress bar.
+    progressBar = findViewById(R.id.progressBar);
 
     // Sets up menu buttons.
     ImageView playButton = findViewById(R.id.action_play);
@@ -121,9 +111,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     ImageView settingButton = findViewById(R.id.action_settings);
     settingButton.setOnClickListener(this::settingButtonListener);
 
-    // Handles the result from RunMLPerfWorker.
-    replyMessenger = new Messenger(new Handler(this.getMainLooper(), this));
-    progressCount = new ProgressCount(progressBar, getWindow());
+    // Create a handler to update UI based on callback.
+    handler = new Handler(this.getMainLooper(), this);
   }
 
   @Override
@@ -139,57 +128,19 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     backend =
         sharedPref.getString(
             getString(R.string.backend_preference_key), getString(R.string.tflite_preference_key));
-    String logInfoPreference =
-        sharedPref.getString(getString(R.string.pref_loginfo_key), getString(R.string.log_short));
-    if (logInfoPreference.equals(getString(R.string.log_short))) {
-      dividerBar.setVisibility(View.VISIBLE);
-      taskResultText.setVisibility(View.VISIBLE);
-      taskResultText.setMaxLines(4);
-    } else if (logInfoPreference.equals(getString(R.string.log_full))) {
-      dividerBar.setVisibility(View.VISIBLE);
-      taskResultText.setVisibility(View.VISIBLE);
-      taskResultText.setMaxLines(12);
-    } else if (logInfoPreference.equals(getString(R.string.log_none))) {
-      dividerBar.setVisibility(View.INVISIBLE);
-      taskResultText.setVisibility(View.GONE);
-    } else {
-      dividerBar.setVisibility(View.INVISIBLE);
-      taskResultText.setVisibility(View.GONE);
-      Log.e(TAG, "Unknown LogInfo perference value: " + logInfoPreference);
-    }
-
-    backendInterface = new BackendInterface(backend);
+    middleInterface = new MiddleInterface(backend, MLPerfEvaluation.this);
   }
 
   @Override
   public boolean handleMessage(Message inputMessage) {
     switch (inputMessage.what) {
-      case RunMLPerfWorker.REPLY_UPDATE:
-        String update = (String) inputMessage.obj;
-        logProgress(update);
+      case MSG_PROGRESS:
+        int percent = inputMessage.arg1;
+        progressBar.setProgress(percent);
         break;
-      case RunMLPerfWorker.REPLY_COMPLETE:
+      case MSG_COMPLETE:
         ResultHolder result = (ResultHolder) inputMessage.obj;
         addNewResult(result);
-        progressCount.increaseProgress();
-        break;
-      case RunMLPerfWorker.REPLY_ERROR:
-        String error = (String) inputMessage.obj;
-        // Set the color of error messages to red.
-        SpannableString sb = new SpannableString(error);
-        sb.setSpan(
-            new ForegroundColorSpan(Color.RED),
-            0,
-            error.length(),
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        taskResultText.append(System.getProperty("line.separator"));
-        taskResultText.append(sb);
-        progressCount.increaseProgress();
-        break;
-      case RunMLPerfWorker.REPLY_CANCEL:
-        String message = (String) inputMessage.obj;
-        logProgress(message);
-        progressCount.decreaseTotal();
         break;
       default:
         return false;
@@ -197,22 +148,17 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     return true;
   }
 
-  private void logProgress(String msg) {
-    taskResultText.append(System.getProperty("line.separator"));
-    taskResultText.append(msg);
-    Log.i(TAG, "logProgress: " + msg);
-  }
-
   private void playButtonListener(View v) {
     if (checkModelIsAvailable()) {
-      backendInterface.runBenchmarks();
+      getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+      middleInterface.runBenchmarks();
     } else {
-      logProgress("Models are not available.");
+      Log.i(TAG, "Models are not available.");
     }
   }
 
   private void stopButtonListener(View v) {
-    backendInterface.abortBenchmarks();
+    middleInterface.abortBenchmarks();
   }
 
   private void refreshButtonListener(View v) {
@@ -265,51 +211,8 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     }
   }
 
-  private static class ProgressCount {
-
-    public ProgressCount(ProgressBar progBar, Window window) {
-      totalWorkCount = 0;
-      finishedWorkCount = 0;
-      progressBar = progBar;
-      this.window = window;
-    }
-
-    public synchronized void increaseTotal() {
-      ++totalWorkCount;
-      updateUI();
-    }
-
-    public synchronized void decreaseTotal() {
-      --totalWorkCount;
-      updateUI();
-    }
-
-    public synchronized void increaseProgress() {
-      ++finishedWorkCount;
-      updateUI();
-    }
-
-    public void updateUI() {
-      if (totalWorkCount > finishedWorkCount) {
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-      } else {
-        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-      }
-      if (totalWorkCount == 0) {
-        progressBar.setProgress(0);
-        return;
-      }
-      progressBar.setProgress(finishedWorkCount * 100 / totalWorkCount);
-    }
-
-    private int totalWorkCount;
-    private int finishedWorkCount;
-    private final ProgressBar progressBar;
-    private final Window window;
-  }
-
   private void addNewResult(ResultHolder result) {
-    String key = result.getModel() + result.getRuntime();
+    String key = result.getId();
     int resultIdx;
     // If a result of (model, runtime) is already displayed, update it.
     if (resultMap.containsKey(key)) {
@@ -363,7 +266,7 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
           doCheckModelIsAvailable();
         } else {
-          logProgress("Warning: You need to grant external storage access to use MLPerf app.");
+          Log.i(TAG, "Warning: You need to grant external storage access to use MLPerf app.");
         }
         break;
       default:
@@ -393,9 +296,26 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
     return true;
   }
 
+  @Override
+  public void onProgressUpdate(int percent) {
+    Message message = handler.obtainMessage(MSG_PROGRESS, percent, 0);
+    handler.sendMessage(message);
+  }
+
+  @Override
+  public void onbenchmarkFinished(ResultHolder result) {
+    Message message = handler.obtainMessage(MSG_COMPLETE, result);
+    handler.sendMessage(message);
+  }
+
+  @Override
+  public void onAllBenchmarksFinished(float summaryScore, ArrayList<ResultHolder> results) {
+    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+  }
+
   private void setModelIsAvailable() {
     modelIsAvailable = true;
-    logProgress("Ready. Click the Run button to evaluate.");
+    Log.i(TAG, "Ready. Click the Run button to evaluate.");
   }
 
   // ModelExtractTask copies or downloads files to their location (external storage) when
@@ -538,21 +458,21 @@ public class MLPerfEvaluation extends AppCompatActivity implements Handler.Callb
 
     @Override
     protected void onPreExecute() {
-      ((MLPerfEvaluation) contextRef.get()).logProgress("Extracting missing files...");
+      Log.i(TAG, "Extracting missing files...");
     }
 
     @Override
     protected void onProgressUpdate(String... filenames) {
-      ((MLPerfEvaluation) contextRef.get()).logProgress("Extracting " + filenames[0] + "...");
+      Log.i(TAG, "Extracting " + filenames[0] + "...");
     }
 
     @Override
     protected void onPostExecute(Void result) {
       if (success) {
-        ((MLPerfEvaluation) contextRef.get()).logProgress("All missing files are extracted.");
+        Log.i(TAG, "All missing files are extracted.");
         ((MLPerfEvaluation) contextRef.get()).setModelIsAvailable();
       } else {
-        ((MLPerfEvaluation) contextRef.get()).logProgress(error);
+        Log.i(TAG, error);
       }
     }
   }

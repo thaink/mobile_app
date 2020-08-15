@@ -18,7 +18,7 @@ package org.mlperf.inference;
 import android.app.Application;
 import android.content.Context;
 
-/* A dummy Application class so we can get global context statically. */
+/** A dummy Application class so we can get global context statically. */
 public class App extends Application {
 
   private static Context mContext;

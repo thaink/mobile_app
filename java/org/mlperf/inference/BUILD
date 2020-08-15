@@ -46,11 +46,11 @@ android_library(
     name = "evaluation_app_lib",
     srcs = [
         "App.java",
-        "BackendInterface.java",
         "Benchmark.java",
         "MLPerfDriverWrapper.java",
         "MLPerfEvaluation.java",
         "MLPerfTasks.java",
+        "MiddleInterface.java",
         "NativeEvaluation.java",
         "ResultHolder.java",
         "ResultsAdapter.java",
