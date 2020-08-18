@@ -76,8 +76,8 @@ ADE20K::ADE20K(const DataFormat& input_format, const DataFormat& output_format,
       tflite::evaluation::StripTrailingSlashes(ground_truth_dir),
       &ground_truth_list_, gt_exts);
   if (ret == kTfLiteError || ground_truth_list_.empty()) {
-    LOG(FATAL) << "Failed to list all the ground truth files in provided path";
-    return;
+    LOG(ERROR) << "Failed to list all the ground truth files in provided path. "
+                  "Only measuring performance.";
   }
 
   // Prepares the preprocessing stage.
@@ -126,6 +126,9 @@ void ADE20K::UnloadSamplesFromRam(
 
 std::vector<uint8_t> ADE20K::ProcessOutput(const int sample_idx,
                                            const std::vector<void*>& outputs) {
+  if (ground_truth_list_.empty()) {
+    return std::vector<uint8_t>();
+  }
   std::vector<uint64_t> tps, fps, fns;
   std::string filename = ground_truth_list_.at(sample_idx);
   std::ifstream stream(filename, std::ios::in | std::ios::binary);
@@ -192,6 +195,9 @@ std::vector<uint8_t> ADE20K::ProcessOutput(const int sample_idx,
 }
 
 float ADE20K::ComputeAccuracy() {
+  if (ground_truth_list_.empty()) {
+    return 0.0;
+  }
   float iou_sum = 0.0;
   for (int j = 0; j < num_classes_; j++) {
     auto iou = tp_acc_[j] * 1.0 / (tp_acc_[j] + fp_acc_[j] + fn_acc_[j]);

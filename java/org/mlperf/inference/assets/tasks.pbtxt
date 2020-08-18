@@ -1,9 +1,9 @@
 task {
   name: "Image classification"
   dataset {
-    name: "Imagenet 2012"
+    name: "Open images subset for classification"
     type: IMAGENET
-    path: "/sdcard/mlperf_datasets/imagenet/img/"
+    path: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/datasets/imagenet.zip"
     groundtruth_src: "@assets/imagenet_val.txt"
   }
   model {
@@ -39,9 +39,9 @@ task {
 task {
   name: "Object detection"
   dataset {
-    name: "Coco 2017"
+    name: "Open images subset for detection"
     type: COCO
-    path: "/sdcard/mlperf_datasets/coco/img/"
+    path: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/datasets/coco.zip"
     groundtruth_src: "@assets/coco_val.pbtxt"
   }
   model {
@@ -95,9 +95,9 @@ task {
 task {
   name: "Image Segmentation"
   dataset {
-    name: "ADE20k"
+    name: "Open images subset for segmentation"
     type: ADE20K
-    path: "/sdcard/mlperf_datasets/ade20k/images"
+    path: "https://github.com/mlperf/mobile_app/raw/model_repo_v0.7/datasets/ade20k.zip"
     groundtruth_src: "/sdcard/mlperf_datasets/ade20k/annotations"
   }
   model {
